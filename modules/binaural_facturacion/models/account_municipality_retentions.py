@@ -35,28 +35,12 @@ class MunicipalityRetentions(models.Model):
     def action_validate(self):
         sequece = self.get_sequence_municipality_retention()
         for retention_line in self.retention_line_ids:
-
-            retention_line.total_retained = retention_line.invoice_amount_untaxed * \
-                (retention_line.activity_aliquot/100)
-            self.get_rate_currency(
-                retention_line.currency_id.name, retention_line.foreign_rate)
-            retention_line.foreign_total_retained = self.get_rate_currency(
-                retention_line.currency_id.name, retention_line.foreign_rate) * retention_line.total_retained
-            invoice = self.env['account.move'].browse(
-                retention_line.invoice_id.id)
-            invoice.write({
+            retention_line._calculate_retention()
+            retention_line.invoice_id.write({
                 "municipality_tax_voucher": str(sequece),
                 "municipality_tax": True
             })
         self.name = str(sequece)
-
-    def get_rate_currency(self, currency_name, rate):
-        decimal_function = self.env['decimal.precision'].search(
-            [('name', '=', 'decimal_quantity')])
-        foreign_currency_name = 'USD' if currency_name == 'VEF' else 'VEF'
-
-        return decimal_function.getCurrencyValue(
-            rate, currency_name, foreign_currency_name, 'CALC')
 
 
 class MunicipalityRetentionsLine(models.Model):
@@ -82,9 +66,38 @@ class MunicipalityRetentionsLine(models.Model):
     foreign_rate = fields.Float(
         string="tasa foranea", related="invoice_id.foreign_currency_rate")
     foreign_total_invoice = fields.Monetary(
-        string="Total Factura", related="invoice_id.foreign_amount_total")
+        string="Total Factura Alterno", related="invoice_id.foreign_amount_total")
     foreign_invoice_amount_untaxed = fields.Monetary(
-        string="Total Factura", related="invoice_id.foreign_amount_untaxed")
+        string="Base Imponible Alterno", related="invoice_id.foreign_amount_untaxed")
     foreign_total_retained = fields.Float(string="Retenido Alterno")
     municipality_id = fields.Many2one(
         'res.country.municipality', string="Municipio", related="economic_activity_id.municipality_id")
+
+    @api.onchange('invoice_id')
+    def default_economic_activity(self):
+        if self.invoice_id:
+            if not self.invoice_id.partner_id.economic_activity_id:
+                raise UserError(
+                    "Debe registrar actividad economica del cliente/proveedor")
+
+            self.economic_activity_id = self.invoice_id.partner_id.economic_activity_id
+
+    def get_rate_currency(self, currency_name, rate):
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')])
+        foreign_currency_name = 'USD' if currency_name == 'VEF' else 'VEF'
+
+        return decimal_function.getCurrencyValue(
+            rate, currency_name, foreign_currency_name, 'CALC')
+
+    def _calculate_retention(self):
+        self.total_retained = self.invoice_amount_untaxed * \
+            (self.activity_aliquot/100)
+        self.get_rate_currency(
+            self.currency_id.name, self.foreign_rate)
+        self.foreign_total_retained = self.get_rate_currency(
+            self.currency_id.name, self.foreign_rate) * self.total_retained
+
+    @api.onchange('economic_activity_id')
+    def onchange_economic_activity_id(self):
+        self._calculate_retention()

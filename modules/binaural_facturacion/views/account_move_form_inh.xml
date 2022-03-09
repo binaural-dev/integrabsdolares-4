@@ -122,6 +122,7 @@
                         <field name="municipality_retentions_line_ids">
                             <tree editable="bottom">
                                 <field name="name" />
+                                <field name="invoice_id" invisible="1" />
                                 <field name="total_invoice" />
                                 <field name="invoice_amount_untaxed" />
                                 <field name="economic_activity_id" />
