@@ -71,10 +71,8 @@
 				    <field name="foreign_iva_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
 					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}"/>
 
-				    <field name="retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}"/>
-				    <field name="foreign_retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}"/>
+				    <field name="retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"/>
+				    <field name="foreign_retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"/>
                                 </tree>
                             </field>
 
