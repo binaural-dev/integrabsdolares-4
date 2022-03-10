@@ -191,6 +191,7 @@ class SignatureConfigBinuaral(models.Model):
 class ResCountryCityBinaural(models.Model):
     _name = 'res.country.city'
     _rec_name = 'name'
+    _description = "ciudad"
     _sql_constraints = [('name_uniq', 'unique (name,country_id,state_id)',
                          'No puede registrar una ciudad con el mismo nombre para el estado y el pais seleccionado')]
 
@@ -203,7 +204,7 @@ class ResCountryCityBinaural(models.Model):
 class ResCountryMunicipalityBinaural(models.Model):
     _name = 'res.country.municipality'
     _rec_name = 'name'
-
+    _description = "Municipio"
     country_id = fields.Many2one('res.country', string="Pais", required=True)
     state_id = fields.Many2many(
         'res.country.state', string="Estado", required=True)
@@ -233,6 +234,7 @@ class ResCountryMunicipalityBinaural(models.Model):
 class EconomicBrandBinaural(models.Model):
     _name = 'economic.branch'
     _rec_name = 'name'
+    _description = "Ramo economico"
     _sql_constraints = [('name_uniq', 'unique (name)',
                          'No puede registrar un ramo económico con el mismo nombre')]
 
@@ -243,6 +245,7 @@ class EconomicBrandBinaural(models.Model):
 
 class EconomicActivity(models.Model):
     _name = 'economic.activity'
+    _description = "Actividad Económica"
     _rec_name = 'name'
     _sql_constraints = [('code_uniq', 'unique (name,municipality_id)',
                          'No puede existir dos registros con el mismo codigo para el municipio seleccionado'),

@@ -201,11 +201,11 @@ class AccountMoveBinauralFacturacion(models.Model):
         string="Comprobante de Retención de ISLR", readonly=False, copy=False)
     # Foreing cyrrency fields
     foreign_currency_id = fields.Many2one('res.currency', default=default_alternate_currency,
-                                          tracking=True)
+                                          )
     foreign_currency_symbol = fields.Char(related="foreign_currency_id.symbol")
-    foreign_currency_rate = fields.Float(string="Tasa", tracking=True)
+    foreign_currency_rate = fields.Float(string="Tasa", )
     foreign_currency_date = fields.Date(
-        string="Fecha", default=fields.Date.today(), tracking=True)
+        string="Fecha", default=fields.Date.today(), )
 
     foreign_amount_untaxed = fields.Monetary(string='Base Imponible', store=True, readonly=True,
                                              compute='_amount_all_foreign',
@@ -231,7 +231,7 @@ class AccountMoveBinauralFacturacion(models.Model):
                                               ('retention_id.type_retention', '=', 'islr')])
     municipality_tax = fields.Boolean(
         string="Generar impuestos municipales", default=False, copy=False)
-    municipality_tax_voucher = fields.Char(
+    municipality_tax_voucher_id = fields.Many2one('account.municipality.retentions',
         string="Comprobante de Impuesto municipal")
     municipality_retentions_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'invoice_id')
@@ -813,11 +813,11 @@ class AccountMoveBinauralFacturacion(models.Model):
             m.line_ids.with_context(
                 check_move_validity=False)._onchange_amount_currency_bin(rate)
 
-    @api.onchange('invoice_line_ids.price_total', 'invoice_line_ids', '')
+    @api.onchange('invoice_line_ids.price_total', 'invoice_line_ids')
     def onchange_invoice_line_ids(self):
-        _logger.warning("aca")
+        _logger.warning("Municipality taxdasds[]")
         if any(self.municipality_retentions_line_ids) and self.state == 'draft' and self.municipality_tax:
-            _logger.warning("aqui")
+            _logger.warning("Municipality tax")
             for retention_line in self.municipality_retentions_line_ids:
                 retention_line._calculate_retention()
 
@@ -831,7 +831,7 @@ class AccountMoveBinauralFacturacion(models.Model):
                 raise UserError(
                     "Para generar impuesto municipal debe marcar el check")
 
-            if not record.partner_id.economic_activity_id:
+            if not record.partner_id.economic_activity_id and record.move_type == 'in_invoice':
                 raise UserError("El proveedor/cliente {} no tiene código de actividad asignado, debe editar la ficha del proveedor/cliente".format(
                     record.partner_id.name))
 
@@ -840,7 +840,7 @@ class AccountMoveBinauralFacturacion(models.Model):
         for record in self.municipality_retentions_line_ids:
             if record.retention_id:
                 raise UserError("No puede facturar una retención ya emitida")
-        _logger.warning(self.municipality_retentions_line_ids.ids)
+        # _logger.warning(self.municipality_retentions_line_ids.ids)
         retention = self.env['account.municipality.retentions'].create({
             "date_accounting": self.date,
             "date": self.date,
@@ -848,10 +848,10 @@ class AccountMoveBinauralFacturacion(models.Model):
             "type": "in_invoice",
             "retention_line_ids": self.municipality_retentions_line_ids.ids
         })
-        
+
         retention.action_validate()
-                
-        return res 
+
+        return res
 
 
 class AcoountMoveLineBinauralFact(models.Model):
@@ -904,11 +904,11 @@ class AcoountMoveLineBinauralFact(models.Model):
     foreign_subtotal = fields.Monetary(string='Subtotal Alterno', store=True, readonly=True,
                                        compute='_amount_all_foreign', tracking=4)
     foreign_currency_id = fields.Many2one(
-        'res.currency', default=default_alternate_currency, tracking=True)
+        'res.currency', default=default_alternate_currency, )
 
-    # foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', tracking=True)
+    # foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', )
     foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', digits=(16, 2),
-                                         tracking=True, store=True)
+                                         store=True)
 
     def reconcile(self):
         ''' Reconcile the current move lines all together.

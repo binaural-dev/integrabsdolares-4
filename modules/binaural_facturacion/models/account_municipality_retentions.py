@@ -6,8 +6,6 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
-
-
 class MunicipalityRetentions(models.Model):
     _name = 'account.municipality.retentions'
     _description = 'Retenciones Municipales'
@@ -33,11 +31,42 @@ class MunicipalityRetentions(models.Model):
         return sequence.next_by_code('retention.municipality.retention.control.number')
 
     def action_validate(self):
-        sequece = self.get_sequence_municipality_retention()
         for retention_line in self.retention_line_ids:
             retention_line._calculate_retention()
+
+        journal_id = int(self.env['ir.config_parameter'].get_param(
+            'journal_municipal_retention'))
+        account_id = int(self.env['ir.config_parameter'].get_param(
+            'account_municipal_retention'))
+
+        if self.type == 'in_invoice':
+            for line in self.retention_line_ids:
+                self.env['account.move'].create({
+                    'move_type': 'entry',
+                    'date': self.date_accounting,
+                    'journal_id': journal_id,
+                    'line_ids': [
+                        (0, 0, {
+                            "account_id": line.invoice_id.line_ids[0].account_id.id,
+                            "partner_id": line.invoice_id.partner_id.id,
+                            "foreign_currency_rate": line.foreign_rate,
+                            "debit": line.total_retained,
+                            'currency_id': line.currency_id.id,
+                        }),
+                        (0, 0, {
+                            "account_id": account_id,
+                            "partner_id": line.invoice_id.partner_id.id,
+                            "foreign_currency_rate": line.foreign_rate,
+                            "credit": line.total_retained,
+                            'currency_id': line.currency_id.id,
+                        })
+                    ],
+                })
+
+        sequece = self.get_sequence_municipality_retention()
+        for retention_line in self.retention_line_ids:
             retention_line.invoice_id.write({
-                "municipality_tax_voucher": str(sequece),
+                "municipality_tax_voucher_id": self.id,
                 "municipality_tax": True
             })
         self.name = str(sequece)
@@ -101,3 +130,4 @@ class MunicipalityRetentionsLine(models.Model):
     @api.onchange('economic_activity_id')
     def onchange_economic_activity_id(self):
         self._calculate_retention()
+        
