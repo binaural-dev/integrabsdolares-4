@@ -166,9 +166,17 @@ class AccountRetention(models.Model):
             if foreign_currency_id == 3:
                 retention_amount.set("string", "Monto Retenido $")
                 foreign_retention_amount.set("string", "Monto Retenido Bs.F")
+
+                modifiers_field = json.loads(retention_amount.get("modifiers") or '{}')
+                modifiers_field['readonly'] = True
+                retention_amount.set('modifiers', json.dumps(modifiers_field))
             elif foreign_currency_id == 2:
                 retention_amount.set("string", "Monto Retenido Bs.F")
                 foreign_retention_amount.set("string", "Monto Retenido $")
+
+                modifiers_field = json.loads(foreign_retention_amount.get("modifiers") or '{}')
+                modifiers_field['readonly'] = True
+                foreign_retention_amount.set('modifiers', json.dumps(modifiers_field))
 
             res["fields"]["retention_line"]["views"]["tree"]["arch"] = etree.tostring(doc, encoding="unicode")
         return res
