@@ -16,4 +16,8 @@
 ## Resultados Esperados
 {Resultado esperado, pueden colocar aqui texto/images o cualquier descricion del resultado esperado}
 
+## Pruebas
+{Redactar las pruebas minimas  que debe realizar el programador. }
+{Ejemplo Total Gravado %16 = 100 ; % IVA = 16% ; IVA %16 = Total Gravado %16 * % IVA = 16}
+
 
