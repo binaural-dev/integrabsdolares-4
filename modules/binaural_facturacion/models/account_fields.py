@@ -144,7 +144,7 @@ class AccountRetention(models.Model):
     @api.model
     def fields_view_get(self, view_id=None, view_type=False, toolbar=False, submenu=False):
         res = super().fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        # foreign_currency_id = self.env["ir.config_parameter"].sudo().get_param("curreny_foreign_id")
+        foreign_currency_id = int(self.env["ir.config_parameter"].sudo().get_param("curreny_foreign_id"))
         if view_type == "form":
             doc = etree.XML(res["fields"]["retention_line"]["views"]["tree"]["arch"])
             facture_amount = doc.xpath("//field[@name='facture_amount']")[0]
@@ -153,9 +153,6 @@ class AccountRetention(models.Model):
             facture_total.set("string", "Total Factura Bs.F")
             iva_amount = doc.xpath("//field[@name='iva_amount']")[0]
             iva_amount.set("string", "Iva Factura Bs.F")
-            retention_amount = doc.xpath("//field[@name='retention_amount']")[0]
-            retention_amount.set("string", "Monto Retenido Bs.F")
-
 
             foreign_facture_amount = doc.xpath("//field[@name='foreign_facture_amount']")[0]
             foreign_facture_amount.set("string", "Base Imponible Bs.F")
@@ -163,7 +160,15 @@ class AccountRetention(models.Model):
             foreign_facture_total.set("string", "Total Factura Bs.F")
             foreign_iva_amount = doc.xpath("//field[@name='foreign_iva_amount']")[0]
             foreign_iva_amount.set("string", "Iva Factura Bs.F")
+
+            retention_amount = doc.xpath("//field[@name='retention_amount']")[0]
             foreign_retention_amount = doc.xpath("//field[@name='foreign_retention_amount']")[0]
-            foreign_retention_amount.set("string", "Monto Retenido Bs.F")
+            if foreign_currency_id == 3:
+                retention_amount.set("string", "Monto Retenido $")
+                foreign_retention_amount.set("string", "Monto Retenido Bs.F")
+            elif foreign_currency_id == 2:
+                retention_amount.set("string", "Monto Retenido Bs.F")
+                foreign_retention_amount.set("string", "Monto Retenido $")
+
             res["fields"]["retention_line"]["views"]["tree"]["arch"] = etree.tostring(doc, encoding="unicode")
         return res
