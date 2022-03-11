@@ -271,8 +271,8 @@ class AccountRetentionBinauralFacturacion(models.Model):
                                 # Crea los apuntes contables para las notas de credito
                                 # Apuntes
                                 move_obj = funtions_retention.create_move_refund_retention(self, line_ret, ret_line,
-                                                                                            cxc, journal_sale, amount_edit,
-                                                                                            decimal_places, True, False)
+                                                                                           cxc, journal_sale, amount_edit,
+                                                                                           decimal_places, True, False)
                                 move_ids.append(move_obj.id)
                             # Va recopilando los IDS de las facturas para la conciliacion
                             facture.append(ret_line.invoice_id)
@@ -293,14 +293,12 @@ class AccountRetentionBinauralFacturacion(models.Model):
                                 # (Un solo movimiento por impuestos de factura)
                                 # Apuntes
                                 funtions_retention.create_move_invoice_retention(self, line_ret, ret_line,
-                                                                                            cxc, journal_sale,
-                                                                                            amount_edit,
-                                                                                            decimal_places, False, move_obj.id)
+                                                                                 cxc, journal_sale, amount_edit,
+                                                                                 decimal_places, False, move_obj.id)
                             else:
                                 funtions_retention.create_move_refund_retention(self, line_ret, ret_line,
-                                                                                            cxc, journal_sale,
-                                                                                            amount_edit,
-                                                                                            decimal_places, False, move_obj.id)
+                                                                                cxc, journal_sale, amount_edit,
+                                                                                decimal_places, False, move_obj.id)
                                 # Crea los apuntes contables para las notas de credito y lo asocia al asiento contable
                                 # Apuntes
                             facture.append(ret_line.invoice_id)
@@ -357,16 +355,14 @@ class AccountRetentionBinauralFacturacion(models.Model):
                                 # Crea los apuntes contables para las facturas, Nota debito
                                 # Apuntes
                                 move_obj = funtions_retention.create_move_invoice_retention(self, line_ret, ret_line,
-                                                                                            cxp, journal_purchase,
-                                                                                            amount_edit,
+                                                                                            cxp, journal_purchase, amount_edit,
                                                                                             decimal_places, True, False)
                                 move_ids.append(move_obj.id)
                             else:
                                 # Crea los apuntes contables para las notas de credito
                                 # Apuntes
                                 move_obj = funtions_retention.create_move_refund_retention(self, line_ret, ret_line,
-                                                                                           cxp, journal_purchase,
-                                                                                           amount_edit,
+                                                                                           cxp, journal_purchase, amount_edit,
                                                                                            decimal_places, True, False)
                                 move_ids.append(move_obj.id)
                             # Va recopilando los IDS de las facturas para la conciliacion
@@ -389,13 +385,11 @@ class AccountRetentionBinauralFacturacion(models.Model):
                                 # (Un solo movimiento por impuestos de factura)
                                 # Apuntes
                                 funtions_retention.create_move_invoice_retention(self, line_ret, ret_line,
-                                                                                 cxp, journal_purchase,
-                                                                                 amount_edit,
+                                                                                 cxp, journal_purchase, amount_edit,
                                                                                  decimal_places, False, move_obj.id)
                             else:
                                 funtions_retention.create_move_refund_retention(self, line_ret, ret_line,
-                                                                                cxp, journal_purchase,
-                                                                                amount_edit,
+                                                                                cxp, journal_purchase, amount_edit,
                                                                                 decimal_places, False, move_obj.id)
                                 # Crea los apuntes contables para las notas de credito y lo asocia al asiento contable
                                 # Apuntes

@@ -169,7 +169,7 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
                             record.foreign_retention_amount = record.retention_amount * value_rate
                         elif foreign_currency_id == 3:
                             value_rate = decimal_function.getCurrencyValue(
-                                rate=record.invoice_id.foreign_currency_rate, base_currency="USD", foreign_currency="VEF")
+                                rate=record.invoice_id.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
                             record.foreign_retention_amount = (record.foreign_facture_amount * (record.related_percentage_tax_base/100) *\
                                     (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
                             record.retention_amount = record.foreign_retention_amount * value_rate

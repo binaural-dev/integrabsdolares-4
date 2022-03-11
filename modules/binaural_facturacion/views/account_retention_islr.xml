@@ -24,6 +24,7 @@
                         <field name="state" widget="statusbar" nolabel="1"/>
                     </header>
                     <group colspan="4" col="4">
+			<field name="currency_id" invisible="1"/>
                         <field name="foreign_currency_id" invisible="1"/>
                         <field name="multi_currency_retention" invisible="1"/>
                         <field name="actual_currency_retention" invisible="1"/>
@@ -42,37 +43,37 @@
                             <field colspan="4" name="retention_line" nolabel="1" attrs="{'invisible':[('partner_id','=',False)],'readonly':[('state','in',['emitted','cancel'])]}">
                                 <tree editable='bottom'>
 			    	    <field name="bs_currency_id" invisible="1"/>
-                                    <field name="name" readonly="1"/>
+                                    <field name="name" readonly="1" optional="show"/>
                                     <field name="invoice_id" domain="[('apply_retention_islr', '=', False), ('move_type', 'in', ['in_invoice','in_refund']), ('state', 'in', ['posted'])]"
                                            force_save="1" attrs="{'readonly':['|',('parent.type_retention', '=', 'iva'),'&amp;', ('parent.type_retention', '=', 'islr'),('parent.type', '=', 'out_invoice')]}"/>
-                                    <field name="retention_id" invisible="1" />
-                                    <field name="invoice_type" force_save="1" readonly="1"/>
-                                    <field name="payment_concept_id" force_save="1" attrs="{'column_invisible':['|',('parent.type_retention', '=', 'iva'),'&amp;', ('parent.type_retention', '=', 'islr'),('parent.type', '=', 'out_invoice')]}"/>
+                                    <field name="retention_id" invisible="1"/>
+                                    <field name="invoice_type" force_save="1" readonly="1" optional="show"/>
+                                    <field name="payment_concept_id" force_save="1" attrs="{'column_invisible':['|',('parent.type_retention', '=', 'iva'),'&amp;', ('parent.type_retention', '=', 'islr'),('parent.type', '=', 'out_invoice')]}" optional="show"/>
 
-				    <field name="tax_line"/>
-				    <field name="foreign_currency_rate"/>
+				    <field name="tax_line" optional="show"/>
+				    <field name="foreign_currency_rate" optional="show"/>
 
 				    <!--
 					SE MUESTRAN LOS CAMPOS ALTERNOS SI LA MONEDA ALTERNA ES BS.F
 					SI LA MONEDA ALTERNA ES USD SE MUESTRAN LOS CAMPOS BASE
 				    -->
 				    <field name="facture_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}" optional="show"/>
 				    <field name="foreign_facture_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}" optional="show"/>
 
 				    <field name="facture_total" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}" optional="show"/>
 				    <field name="foreign_facture_total" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}" optional="show"/>
 
 				    <field name="iva_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 3)]}" optional="show"/>
 				    <field name="foreign_iva_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"
-					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}"/>
+					   attrs="{'column_invisible': [('parent.foreign_currency_id', '=', 2)]}" optional="show"/>
 
-				    <field name="retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"/>
-				    <field name="foreign_retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}"/>
+				    <field name="retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}" optional="show"/>
+				    <field name="foreign_retention_amount" widget="monetary" options="{'currency_field': 'bs_currency_id'}" optional="show"/>
                                 </tree>
                             </field>
 

@@ -259,7 +259,7 @@
                                 <span>--</span>
                             </t>
                         </div>
-                        `                       <!-- Total Compras Incluyendo el IVA -->
+                        `<!-- Total Compras Incluyendo el IVA -->
                         <div class="" style="width:7%">
                             <span>
 				<t t-if="get_foreign_currency_id == 3">
@@ -276,13 +276,24 @@
 
                         <!-- sin derecho a Crédito IVA -->
                         <div class="" style="width:7%">
-                            <t t-if="float(line.invoice_id.foreign_amount_by_group[-1][1]) == 0.0">
-                                <t t-set="amount_except"
-                                   t-value="total_amount_amount_except+line.invoice_id.foreign_amount_by_group[-1][2]"/>
-                            </t>
-                            <t t-else="">
-                                <t t-set="amount_except" t-value="float(0)" />
-                            </t>
+			    <t t-if="get_foreign_currency_id == 3">
+                            	<t t-if="float(line.invoice_id.foreign_amount_by_group[-1][1]) == 0.0">
+                                    <t t-set="amount_except"
+                                       t-value="total_amount_amount_except+line.invoice_id.foreign_amount_by_group[-1][2]"/>
+                            	</t>
+                            	<t t-else="">
+                                    <t t-set="amount_except" t-value="float(0)" />
+                            	</t>
+			    </t>
+			    <t t-else="">
+                            	<t t-if="float(line.invoice_id.foreign_amount_by_group[-1][1]) == 0.0">
+                                    <t t-set="amount_except"
+                                       t-value="total_amount_amount_except+line.invoice_id.amount_by_group[-1][2]"/>
+                            	</t>
+                            	<t t-else="">
+                                    <t t-set="amount_except" t-value="float(0)" />
+                            	</t>
+			    </t>
                             <span t-esc="amount_except"
                                   t-options='{"widget": "float", "precision": get_digits}'/>
                             <t t-set="amount_except" t-value="total_amount_amount_except + amount_except"/>
@@ -376,22 +387,22 @@
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
                     <div class="" style="width:10%">
-                        <span t-esc="float(facture_amount)"
+			<span t-esc="float('.'.join(facture_amount.split('.')[:2]))"
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
                     <div class="" style="width:7%">
                         <span style="visibility:hidden">--</span>
                     </div>
                     <div class="" style="width:7%">
-                        <span t-esc="float(porcentage_retention)"
+                        <span t-esc="float('.'.join(porcentage_retention.split('.')[:2]))"
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
                     <div class="" style="width:10%">
-                        <span t-esc="float(total_amount_tax)"
+                        <span t-esc="float('.'.join(total_amount_tax.split('.')[:2]))"
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
                     <div class="" style="width:10%">
-                        <span t-esc="float(total_amount_to_pay)"
+                        <span t-esc="float('.'.join(total_amount_to_pay.split('.')[:2]))"
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
 
