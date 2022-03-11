@@ -229,10 +229,12 @@ class AccountMoveBinauralFacturacion(models.Model):
 
     retention_islr_line_ids = fields.One2many('account.retention.line', 'invoice_id', domain=[
                                               ('retention_id.type_retention', '=', 'islr')])
-    
-    municipality_tax = fields.Boolean(string="Generar impuestos municipales", default=False, copy=False)
-    municipality_tax_voucher = fields.Char(string="Comprobante de Impuesto municipal")
-    municipality_retentions_line_ids = fields.One2many('account.municipality.retentions.line', 'invoice_id')
+    municipality_tax = fields.Boolean(
+        string="Generar impuestos municipales", default=False, copy=False)
+    municipality_tax_voucher = fields.Char(
+        string="Comprobante de Impuesto municipal")
+    municipality_retentions_line_ids = fields.One2many(
+        'account.municipality.retentions.line', 'invoice_id')
 
     @api.constrains('foreign_currency_rate')
     def _check_foreign_currency_rate(self):
@@ -811,6 +813,46 @@ class AccountMoveBinauralFacturacion(models.Model):
             m.line_ids.with_context(
                 check_move_validity=False)._onchange_amount_currency_bin(rate)
 
+    @api.onchange('invoice_line_ids.price_total', 'invoice_line_ids', '')
+    def onchange_invoice_line_ids(self):
+        _logger.warning("aca")
+        if any(self.municipality_retentions_line_ids) and self.state == 'draft' and self.municipality_tax:
+            _logger.warning("aqui")
+            for retention_line in self.municipality_retentions_line_ids:
+                retention_line._calculate_retention()
+
+    @api.constrains('municipality_tax', 'municipality_retentions_line_ids')
+    def _constraint_municipality_tax(self):
+        for record in self:
+            if record.municipality_tax and not record.journal_id.fiscal:
+                raise UserError("No puede emitir retenciones municipales para el diario no fiscal {}".format(
+                    record.journal_id.name))
+            if not record.municipality_tax and any(record.municipality_retentions_line_ids):
+                raise UserError(
+                    "Para generar impuesto municipal debe marcar el check")
+
+            if not record.partner_id.economic_activity_id:
+                raise UserError("El proveedor/cliente {} no tiene código de actividad asignado, debe editar la ficha del proveedor/cliente".format(
+                    record.partner_id.name))
+
+    def action_post(self):
+        res = super(AccountMoveBinauralFacturacion, self).action_post()
+        for record in self.municipality_retentions_line_ids:
+            if record.retention_id:
+                raise UserError("No puede facturar una retención ya emitida")
+        _logger.warning(self.municipality_retentions_line_ids.ids)
+        retention = self.env['account.municipality.retentions'].create({
+            "date_accounting": self.date,
+            "date": self.date,
+            "partner_id": self.partner_id.id,
+            "type": "in_invoice",
+            "retention_line_ids": self.municipality_retentions_line_ids.ids
+        })
+        
+        retention.action_validate()
+                
+        return res 
+
 
 class AcoountMoveLineBinauralFact(models.Model):
     _inherit = 'account.move.line'
@@ -837,7 +879,7 @@ class AcoountMoveLineBinauralFact(models.Model):
         else:
             return False
 
-    @api.depends('move_id.foreign_currency_rate', 'price_unit', 'quantity')
+    @api.depends('move_id.foreign_currency_rate', 'price_unit', 'quantity', 'tax_ids')
     def _amount_all_foreign(self):
         """
         Compute the foreign total amounts of the SO.
