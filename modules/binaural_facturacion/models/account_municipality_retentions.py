@@ -12,12 +12,12 @@ class MunicipalityRetentions(models.Model):
     _name = 'account.municipality.retentions'
     _description = 'Retenciones Municipales'
 
-    name = fields.Char(string="Numero de Comprobante", readonly=True)
+    name = fields.Char(string="Número de Comprobante", readonly=True)
     date = fields.Date(string="Fecha de Comprobante")
     type = fields.Selection(selection=[('out_invoice', 'Factura de Cliente'), (
         'in_invoice', 'Factura de Proveedor')], string="Tipo de Comprobante", readonly=True)
     date_accounting = fields.Date(string="Fecha Contable")
-    partner_id = fields.Many2one('res.partner', string="Razon Social")
+    partner_id = fields.Many2one('res.partner', string="Razón Social")
     retention_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'retention_id', string="Retenciones")
 
@@ -47,7 +47,7 @@ class MunicipalityRetentionsLine(models.Model):
     _name = "account.municipality.retentions.line"
     _description = 'Retenciones Municipales Linea'
 
-    name = fields.Char(string="Descripcion", default="RET-Municipal")
+    name = fields.Char(string="Descripción", default="RET-Municipal")
     retention_id = fields.Many2one(
         'account.municipality.retentions', string="Retencion")
     invoice_id = fields.Many2one(

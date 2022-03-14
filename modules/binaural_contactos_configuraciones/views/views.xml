@@ -351,7 +351,7 @@
 
 
         <!--MENU-->
-        <menuitem name="Ciudad" id="menu_res_city" parent="binaural_contactos_configuraciones.master_configuration" action="action_res_city" />
+        <menuitem name="Ciudad" id="menu_res_city" parent="binaural_contactos_configuraciones.master_configuration" action="action_res_city" sequence="1" />
         <!--RES COUNTRY CITY-->
 
 
@@ -396,7 +396,7 @@
         </record>
 
         <!--MENU-->
-        <menuitem name="Município" id="menu_res_municipality" parent="binaural_contactos_configuraciones.master_configuration" action="action_res_municipality" />
+        <menuitem name="Município" id="menu_res_municipality" parent="binaural_contactos_configuraciones.master_configuration" action="action_res_municipality" sequence="2" />
         <!--RES COUNTRY MUNICIPALITY-->
 
         <!--RAMO ECONOMICO-->
@@ -450,7 +450,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem name="Ramo Económico" id="menu_economic_branch" parent="binaural_contactos_configuraciones.master_configuration" action="action_economic_branch" />
+        <menuitem name="Ramo Económico" id="menu_economic_branch" parent="binaural_contactos_configuraciones.master_configuration" action="action_economic_branch" sequence="3" />
 
         <record id="view_economic_activity_tree" model="ir.ui.view">
             <field name="name">Actividad Económica</field>
@@ -495,7 +495,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem name="Actividad Económica" id="menu_economic_activity" parent="binaural_contactos_configuraciones.master_configuration" action="action_economic_activity" />
+        <menuitem name="Actividad Económica" id="menu_economic_activity" parent="binaural_contactos_configuraciones.master_configuration" action="action_economic_activity" sequence="4" />
 
     </data>
 </odoo>
