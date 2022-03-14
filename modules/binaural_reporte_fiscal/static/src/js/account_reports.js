@@ -3,7 +3,6 @@ odoo.define('binaural_reporte_fiscal.accountReportsWidgetInherit', function (req
 
     var core = require('web.core');
     var accountReportsWidget = require('account_reports.account_report');
-    require('account_reports.account_report')
     var QWeb = core.qweb;
     var _t = core._t;
     var datepicker = require('web.datepicker');
