@@ -831,7 +831,7 @@ class AccountMoveBinauralFacturacion(models.Model):
                 raise UserError(
                     "Para generar impuesto municipal debe marcar el check")
 
-            if not record.partner_id.economic_activity_id:
+            if not record.partner_id.economic_activity_id and record.move_type == 'in_invoice':
                 raise UserError("El proveedor/cliente {} no tiene código de actividad asignado, debe editar la ficha del proveedor/cliente".format(
                     record.partner_id.name))
 
