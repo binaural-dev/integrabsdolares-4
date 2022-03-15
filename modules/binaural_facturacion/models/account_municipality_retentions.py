@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from email.policy import default
 import logging
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
@@ -35,18 +34,25 @@ class MunicipalityRetentions(models.Model):
     def action_validate(self):
         for retention_line in self.retention_line_ids:
             retention_line._calculate_retention()
+            retention_line.invoice_id.write({
+                "municipality_tax_voucher_id": self.id,
+                "municipality_tax": True
+            })
 
         journal_id = int(self.env['ir.config_parameter'].get_param(
             'journal_municipal_retention'))
         account_id = int(self.env['ir.config_parameter'].get_param(
             'account_municipal_retention'))
 
+        entries_to_post = []
+
         if self.type == 'in_invoice':
             for line in self.retention_line_ids:
-                self.env['account.move'].create({
+                to_post = self.env['account.move'].create({
                     'move_type': 'entry',
                     'date': self.date_accounting,
                     'journal_id': journal_id,
+                    'foreign_currency_rate': line.invoice_id.foreign_currency_rate,
                     'line_ids': [
                         (0, 0, {
                             "account_id": line.invoice_id.line_ids[0].account_id.id,
@@ -64,13 +70,13 @@ class MunicipalityRetentions(models.Model):
                         })
                     ],
                 })
+                entries_to_post.append(to_post)
 
-        for retention_line in self.retention_line_ids:
-            retention_line.invoice_id.write({
-                "municipality_tax_voucher_id": self.id,
-                "municipality_tax": True
-            })
-            
+        for index ,retention_line in enumerate(self.retention_line_ids):
+            _logger.warning(entries_to_post[index])
+            entries_to_post[index].action_post()
+            retention_line.invoice_id.js_assign_outstanding_line(entries_to_post[index].line_ids[0].id)
+
         sequence = self.get_sequence_municipality_retention()
         self.name = str(sequence)
 

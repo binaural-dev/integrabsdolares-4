@@ -211,6 +211,7 @@ class ResCountryMunicipalityBinaural(models.Model):
     state_id = fields.Many2many(
         'res.country.state', string="Estado", required=True)
     name = fields.Char(string="Município", required=True)
+    active = fields.Boolean(default=True)
 
     @api.onchange('name')
     def on_change_state(self):

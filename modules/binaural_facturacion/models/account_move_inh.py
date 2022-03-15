@@ -235,7 +235,7 @@ class AccountMoveBinauralFacturacion(models.Model):
         string="Comprobante de Impuesto municipal")
     municipality_retentions_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'invoice_id')
-
+    
     @api.constrains('foreign_currency_rate')
     def _check_foreign_currency_rate(self):
         for record in self:
@@ -813,7 +813,7 @@ class AccountMoveBinauralFacturacion(models.Model):
             m.line_ids.with_context(
                 check_move_validity=False)._onchange_amount_currency_bin(rate)
 
-    @api.onchange('invoice_line_ids.price_total', 'invoice_line_ids')
+    @api.onchange('invoice_line_ids.price_total', 'invoice_line_ids', 'foreign_currency_rate')
     def onchange_invoice_line_ids(self):
         _logger.warning("Municipality taxdasds[]")
         if any(self.municipality_retentions_line_ids) and self.state == 'draft' and self.municipality_tax:

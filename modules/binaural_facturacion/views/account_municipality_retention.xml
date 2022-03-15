@@ -4,8 +4,9 @@
         <field name="model">account.municipality.retentions</field>
         <field name="arch" type="xml">
             <form string="Retention">
-                <header >
+                <header>
                     <button name="action_validate" attrs="{'invisible': [('name','!=', False)]}" type="object" string="Validar" class="btn btn-primary" />
+                    <button name="action_get_move_line_id" type="object" string="ver asientos" class="btn btn-primary" />
                 </header>
                 <sheet>
                     <group>
@@ -21,7 +22,7 @@
                     </group>
                     <notebook>
                         <page string="Linea de Retención">
-                            <field name="retention_line_ids" attrs="{'invisible': [('partner_id','=', False)]}"/>
+                            <field name="retention_line_ids" attrs="{'invisible': [('partner_id','=', False)]}" />
                         </page>
                     </notebook>
                 </sheet>
