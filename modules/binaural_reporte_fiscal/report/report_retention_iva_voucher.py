@@ -13,6 +13,7 @@ class ReportRetentionIvaVoucher(models.AbstractModel):
             "docids": docids,
             "doc_model": "account.retention",
             "get_digits": self.get_digits(),
+            "get_foreign_currency_id": self.get_foreign_currency_id(),
             "docs": docs,
         }
 
@@ -20,3 +21,6 @@ class ReportRetentionIvaVoucher(models.AbstractModel):
         currency_foreign_id = self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id')
         decimal_places = self.env["res.currency"].search([("id", '=', currency_foreign_id)]).decimal_places
         return decimal_places
+
+    def get_foreign_currency_id(self):
+        return int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
