@@ -33,14 +33,15 @@ class MunicipalityRetentions(models.Model):
         return sequence.next_by_code('retention.municipality.retention.control.number')
 
     def action_validate(self):
-        sequece = self.get_sequence_municipality_retention()
+        sequence = self.get_sequence_municipality_retention()
         for retention_line in self.retention_line_ids:
             retention_line._calculate_retention()
             retention_line.invoice_id.write({
-                "municipality_tax_voucher": str(sequece),
+                "municipality_tax_voucher": str(sequence),
                 "municipality_tax": True
             })
-        self.name = str(sequece)
+
+        self.name = str(sequence)
 
 
 class MunicipalityRetentionsLine(models.Model):
@@ -72,6 +73,13 @@ class MunicipalityRetentionsLine(models.Model):
     foreign_total_retained = fields.Float(string="Retenido Alterno")
     municipality_id = fields.Many2one(
         'res.country.municipality', string="Municipio", related="economic_activity_id.municipality_id")
+
+    @api.constrains('total_retained', 'total_invoice', 'foreign_total_retained')
+    def _constraint_municipality_tax(self):
+        for record in self:
+            if record.total_retained == 0 or record.total_invoice == 0 or record.foreign_total_retained == 0:
+                raise ValidationError(
+                    "No se puede crear una retención con valores en cero")
 
     @api.onchange('invoice_id')
     def default_economic_activity(self):
