@@ -205,6 +205,8 @@ class ResCountryMunicipalityBinaural(models.Model):
     _name = 'res.country.municipality'
     _rec_name = 'name'
     _description = "Municipio"
+    
+    
     country_id = fields.Many2one('res.country', string="Pais", required=True)
     state_id = fields.Many2many(
         'res.country.state', string="Estado", required=True)
@@ -217,7 +219,6 @@ class ResCountryMunicipalityBinaural(models.Model):
     @api.constrains('country_id', 'state_id', 'name')
     def constraint_unique_municipality(self):
         for record in self:
-            _logger.warning(record.id)
             x = self.search([
                 ('country_id', '=', record.country_id.id),
                 ('state_id', '=', record.state_id.id),
@@ -242,6 +243,18 @@ class EconomicBrandBinaural(models.Model):
     status = fields.Selection(selection=[(
         'active', 'Activo'), ('inactive', 'Desactivado')], string="Estado", default='active')
 
+    @api.onchange('name')
+    def on_change_name(self):
+        self.name = str(self.name or '').upper().strip()
+
+    @api.constrains('name')
+    def _constraint_name_economic_branch(self):
+        for record in self:
+            exist = self.search([('name', '=', record.name), ('id', '!=', record.id)])
+            
+            if any(exist):
+                raise ValidationError(
+                    "El ramo economico ya se encuentra registrado")
 
 class EconomicActivity(models.Model):
     _name = 'economic.activity'

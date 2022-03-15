@@ -823,17 +823,24 @@ class AccountMoveBinauralFacturacion(models.Model):
 
     @api.constrains('municipality_tax', 'municipality_retentions_line_ids')
     def _constraint_municipality_tax(self):
+        municipality_retention = self.env["ir.config_parameter"].sudo(
+        ).get_param("use_municipal_retention")
         for record in self:
+            if not record.partner_id.economic_activity_id and record.move_type in ['in_invoice', 'in_refund'] and municipality_retention and record.municipality_tax:
+                raise UserError("El proveedor/cliente {} no tiene código de actividad asignado, debe editar la ficha del proveedor/cliente".format(
+                    record.partner_id.name))
+
             if record.municipality_tax and not record.journal_id.fiscal:
                 raise UserError("No puede emitir retenciones municipales para el diario no fiscal {}".format(
                     record.journal_id.name))
+
+            if record.municipality_tax and not any(record.municipality_retentions_line_ids):
+                raise UserError(
+                    "Debe agregar una linea en la retención municipal")
+
             if not record.municipality_tax and any(record.municipality_retentions_line_ids):
                 raise UserError(
                     "Para generar impuesto municipal debe marcar el check")
-
-            if not record.partner_id.economic_activity_id and record.move_type == 'in_invoice':
-                raise UserError("El proveedor/cliente {} no tiene código de actividad asignado, debe editar la ficha del proveedor/cliente".format(
-                    record.partner_id.name))
 
     def action_post(self):
         res = super(AccountMoveBinauralFacturacion, self).action_post()

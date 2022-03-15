@@ -31,7 +31,7 @@ class ResConfigSettingBinauralContactos(models.TransientModel):
     curreny_foreign_id = fields.Many2one('res.currency', 'Moneda Alterna')
 
     use_municipal_retention = fields.Boolean(
-        string="Uso de Retenciones Municipales", default=False)
+        "Uso de Retenciones Municipales", implied_group='binaural_contactos_configuraciones.use_municipal_retention', default=False)
 
     account_municipal_retention = fields.Many2one(
         'account.account', 'Cuenta de Retenciones Municipales')

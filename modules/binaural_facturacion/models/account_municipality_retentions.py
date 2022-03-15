@@ -6,16 +6,18 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
+
+
 class MunicipalityRetentions(models.Model):
     _name = 'account.municipality.retentions'
     _description = 'Retenciones Municipales'
 
-    name = fields.Char(string="Numero de Comprobante", readonly=True)
+    name = fields.Char(string="Número de Comprobante", readonly=True)
     date = fields.Date(string="Fecha de Comprobante")
     type = fields.Selection(selection=[('out_invoice', 'Factura de Cliente'), (
         'in_invoice', 'Factura de Proveedor')], string="Tipo de Comprobante", readonly=True)
     date_accounting = fields.Date(string="Fecha Contable")
-    partner_id = fields.Many2one('res.partner', string="Razon Social")
+    partner_id = fields.Many2one('res.partner', string="Razón Social")
     retention_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'retention_id', string="Retenciones")
 
@@ -63,20 +65,21 @@ class MunicipalityRetentions(models.Model):
                     ],
                 })
 
-        sequece = self.get_sequence_municipality_retention()
         for retention_line in self.retention_line_ids:
             retention_line.invoice_id.write({
                 "municipality_tax_voucher_id": self.id,
                 "municipality_tax": True
             })
-        self.name = str(sequece)
+            
+        sequence = self.get_sequence_municipality_retention()
+        self.name = str(sequence)
 
 
 class MunicipalityRetentionsLine(models.Model):
     _name = "account.municipality.retentions.line"
     _description = 'Retenciones Municipales Linea'
 
-    name = fields.Char(string="Descripcion", default="RET-Municipal")
+    name = fields.Char(string="Descripción", default="RET-Municipal")
     retention_id = fields.Many2one(
         'account.municipality.retentions', string="Retencion")
     invoice_id = fields.Many2one(
@@ -101,6 +104,13 @@ class MunicipalityRetentionsLine(models.Model):
     foreign_total_retained = fields.Float(string="Retenido Alterno")
     municipality_id = fields.Many2one(
         'res.country.municipality', string="Municipio", related="economic_activity_id.municipality_id")
+
+    @api.constrains('total_retained', 'total_invoice', 'foreign_total_retained')
+    def _constraint_municipality_tax(self):
+        for record in self:
+            if record.total_retained == 0 or record.total_invoice == 0 or record.foreign_total_retained == 0:
+                raise ValidationError(
+                    "No se puede crear una retención con valores en cero")
 
     @api.onchange('invoice_id')
     def default_economic_activity(self):
@@ -130,4 +140,3 @@ class MunicipalityRetentionsLine(models.Model):
     @api.onchange('economic_activity_id')
     def onchange_economic_activity_id(self):
         self._calculate_retention()
-        

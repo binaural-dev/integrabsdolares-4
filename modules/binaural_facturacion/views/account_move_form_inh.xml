@@ -118,7 +118,7 @@
                         </field>
 
                     </page>
-                    <page string="Impuestos Municipales" attrs="{'invisible':[('move_type','not in', ['in_invoice','in_refund'])]}">
+                    <page string="Impuestos Municipales" name="imp_municipales">
                         <field name="municipality_retentions_line_ids">
                             <tree editable="bottom">
                                 <field name="name" />
