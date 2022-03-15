@@ -1,4 +1,4 @@
-git merge --no-ff "staging"git merge --no-ff "staging"from odoo import api, models
+from odoo import api, models
 
 
 class ReportRetentionIvaVoucher(models.AbstractModel):
