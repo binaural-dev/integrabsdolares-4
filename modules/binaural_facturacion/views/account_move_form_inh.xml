@@ -19,7 +19,7 @@
                     <label for="islr_voucher_number" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
                     <field name="islr_voucher_number" readonly="1" nolabel="1" force_save="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
                     <field name="municipality_tax" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
-                    <field name="municipality_tax_voucher" readonly="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
+                    <field name="municipality_tax_voucher_id" readonly="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
                 </xpath>
 
                 <xpath expr="//h1[@class='mt0']" position="after">

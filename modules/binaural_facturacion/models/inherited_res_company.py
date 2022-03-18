@@ -9,7 +9,7 @@ import json
 class InheritedResCompany(models.Model):
     _inherit = 'res.company'
 
-    logo_hacienda = fields.Image(string="Logo de Hacienda")
+    logo_hacienda = fields.Image(string="Logo de Hacienda",max_width=128, max_height=128)
     name_hacienda = fields.Char(string="Nombre de Hacienda")
     economic_activity_number = fields.Char(
         string="Número de actividad económica")

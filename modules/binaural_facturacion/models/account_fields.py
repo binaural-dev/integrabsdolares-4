@@ -133,7 +133,7 @@ class AccountMove(models.Model):
             municipality_field.set('modifiers', json.dumps(modifiers_field))
 
             municipality_voucher = doc.xpath(
-                "//field[@name='municipality_tax_voucher']")[0]
+                "//field[@name='municipality_tax_voucher_id']")[0]
             modifiers_voucher = json.loads(
                 municipality_voucher.get("modifiers") or '{}')
             modifiers_voucher['invisible'] = True
@@ -163,7 +163,7 @@ class AccountMove(models.Model):
                     'modifiers', json.dumps(modifiers_field))
 
                 municipality_voucher = doc.xpath(
-                    "//field[@name='municipality_tax_voucher']")[0]
+                    "//field[@name='municipality_tax_voucher_id']")[0]
                 modifiers_voucher = json.loads(
                     municipality_voucher.get("modifiers") or '{}')
                 modifiers_voucher['invisible'] = False
@@ -189,32 +189,70 @@ class AccountMove(models.Model):
                     'modifiers', json.dumps(modifiers_field))
 
                 municipality_voucher = doc.xpath(
-                    "//field[@name='municipality_tax_voucher']")[0]
-                modifiers_voucher = json.loads(
+                    "//field[@name='municipality_tax_voucher_id']")[0]
+                modifiers_voucher=json.loads(
                     municipality_voucher.get("modifiers") or '{}')
-                modifiers_voucher['invisible'] = True
+                modifiers_voucher['invisible']=True
                 municipality_voucher.set(
                     'modifiers', json.dumps(modifiers_voucher))
 
-                municipality_page = doc.xpath(
+                municipality_page=doc.xpath(
                     "//page[@name='imp_municipales']")[0]
-                modifiers_page = json.loads(
+                modifiers_page=json.loads(
                     municipality_page.get("modifiers") or '{}')
-                modifiers_page['invisible'] = True
+                modifiers_page['invisible']=True
                 municipality_page.set('modifiers', json.dumps(modifiers_page))
 
-                res["arch"] = etree.tostring(doc, encoding="unicode")
+                res["arch"]=etree.tostring(doc, encoding = "unicode")
 
         return res
 
 
 class AccountRetention(models.Model):
-    _inherit = "account.retention"
+    _inherit="account.retention"
 
-    @api.model
-    def fields_view_get(self, view_id=None, view_type=False, toolbar=False, submenu=False):
-        res = super().fields_view_get(view_id=view_id,
-                                      view_type=view_type, toolbar=toolbar, submenu=submenu)
+    @ api.model
+    def fields_view_get(self, view_id = None, view_type = False, toolbar = False, submenu = False):
+        res=super().fields_view_get(view_id = view_id,
+                                      view_type = view_type, toolbar = toolbar, submenu = submenu)
+        foreign_currency_id=self.env["ir.config_parameter"].sudo(
+        ).get_param("curreny_foreign_id")
+        if foreign_currency_id and foreign_currency_id == '2':
+            if view_type == "form":
+                doc=etree.XML(res["fields"]["retention_line"]
+                                ["views"]["tree"]["arch"])
+                foreign_facture_amount=doc.xpath(
+                    "//field[@name='foreign_facture_amount']")[0]
+                foreign_facture_amount.set("string", "Base Imponible $")
+                foreign_facture_total = doc.xpath(
+                    "//field[@name='foreign_facture_total']")[0]
+                foreign_facture_total.set("string", "Total Factura $")
+                foreign_iva_amount = doc.xpath(
+                    "//field[@name='foreign_iva_amount']")[0]
+                foreign_iva_amount.set("string", "Iva Factura $")
+                foreign_retention_amount = doc.xpath(
+                    "//field[@name='foreign_retention_amount']")[0]
+                foreign_retention_amount.set("string", "Monto Retenido $")
+                res["fields"]["retention_line"]["views"]["tree"]["arch"] = etree.tostring(
+                    doc, encoding="unicode")
+        elif foreign_currency_id and foreign_currency_id == '3':
+            if view_type == "form":
+                doc = etree.XML(res["fields"]["retention_line"]
+                                ["views"]["tree"]["arch"])
+                foreign_facture_amount = doc.xpath(
+                    "//field[@name='foreign_facture_amount']")[0]
+                foreign_facture_amount.set("string", "Base Imponible Bs.F")
+                foreign_facture_total = doc.xpath(
+                    "//field[@name='foreign_facture_total']")[0]
+                foreign_facture_total.set("string", "Total Factura Bs.F")
+                foreign_iva_amount = doc.xpath(
+                    "//field[@name='foreign_iva_amount']")[0]
+                foreign_iva_amount.set("string", "Iva Factura Bs.F")
+                foreign_retention_amount = doc.xpath(
+                    "//field[@name='foreign_retention_amount']")[0]
+                foreign_retention_amount.set("string", "Monto Retenido Bs.F")
+                res["fields"]["retention_line"]["views"]["tree"]["arch"] = etree.tostring(
+                    doc, encoding="unicode")
         foreign_currency_id = int(
             self.env["ir.config_parameter"].sudo().get_param("curreny_foreign_id"))
         if view_type == "form":
