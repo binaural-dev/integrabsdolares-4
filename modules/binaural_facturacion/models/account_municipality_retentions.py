@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import xlwt
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools.misc import xlwt
+import io
+import base64
 
 _logger = logging.getLogger(__name__)
 
@@ -32,12 +36,14 @@ class MunicipalityRetentions(models.Model):
         return sequence.next_by_code('retention.municipality.retention.control.number')
 
     def action_validate(self):
+        context = dict(self._context or {})
         for retention_line in self.retention_line_ids:
             retention_line._calculate_retention()
-            retention_line.invoice_id.write({
-                "municipality_tax_voucher_id": self.id,
-                "municipality_tax": True
-            })
+            if not'from_invoice' in context:
+                retention_line.invoice_id.write({
+                    "municipality_tax_voucher_id": self.id,
+                    "municipality_tax": True
+                })
 
         journal_id = int(self.env['ir.config_parameter'].get_param(
             'journal_municipal_retention'))
@@ -72,13 +78,25 @@ class MunicipalityRetentions(models.Model):
                 })
                 entries_to_post.append(to_post)
 
-        for index ,retention_line in enumerate(self.retention_line_ids):
-            _logger.warning(entries_to_post[index])
+        for index, retention_line in enumerate(self.retention_line_ids):
             entries_to_post[index].action_post()
-            retention_line.invoice_id.js_assign_outstanding_line(entries_to_post[index].line_ids[0].id)
+            retention_line.invoice_id.js_assign_outstanding_line(
+                entries_to_post[index].line_ids[0].id)
 
         sequence = self.get_sequence_municipality_retention()
         self.name = str(sequence)
+        
+    def action_open_wizard(self):
+        return { 
+            'name': 'Reporte de Retenciones Municipales',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'view_id': False,
+            'res_model': 'wizard.municipality.retentions',
+            'context': {'default_retention_id': self.id},
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
 
 
 class MunicipalityRetentionsLine(models.Model):

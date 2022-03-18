@@ -232,10 +232,10 @@ class AccountMoveBinauralFacturacion(models.Model):
     municipality_tax = fields.Boolean(
         string="Generar impuestos municipales", default=False, copy=False)
     municipality_tax_voucher_id = fields.Many2one('account.municipality.retentions',
-        string="Comprobante de Impuesto municipal")
+                                                  string="Comprobante de Impuesto municipal", copy=False)
     municipality_retentions_line_ids = fields.One2many(
-        'account.municipality.retentions.line', 'invoice_id')
-    
+        'account.municipality.retentions.line', 'invoice_id', copy=False)
+
     @api.constrains('foreign_currency_rate')
     def _check_foreign_currency_rate(self):
         for record in self:
@@ -844,19 +844,22 @@ class AccountMoveBinauralFacturacion(models.Model):
 
     def action_post(self):
         res = super(AccountMoveBinauralFacturacion, self).action_post()
-        for record in self.municipality_retentions_line_ids:
-            if record.retention_id:
-                raise UserError("No puede facturar una retención ya emitida")
-        # _logger.warning(self.municipality_retentions_line_ids.ids)
-        retention = self.env['account.municipality.retentions'].create({
-            "date_accounting": self.date,
-            "date": self.date,
-            "partner_id": self.partner_id.id,
-            "type": "in_invoice",
-            "retention_line_ids": self.municipality_retentions_line_ids.ids
-        })
-
-        retention.action_validate()
+        if self.municipality_tax and self.move_type in ['in_invoice', 'in_refund']:
+            for record in self.municipality_retentions_line_ids:
+                if record.retention_id:
+                    raise UserError(
+                        "No puede facturar una retención ya emitida")
+            # _logger.warning(self.municipality_retentions_line_ids.ids)
+            retention = self.env['account.municipality.retentions'].create({
+                "date_accounting": self.date,
+                "date": self.date,
+                "partner_id": self.partner_id.id,
+                "type": "in_invoice",
+                "retention_line_ids": self.municipality_retentions_line_ids.ids
+            })
+            _logger.warning("================PASO================")
+            _logger.warning(retention)
+            retention.with_context(from_invoice=True).action_validate()
 
         return res
 

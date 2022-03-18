@@ -6,7 +6,7 @@
             <form string="Retention">
                 <header>
                     <button name="action_validate" attrs="{'invisible': [('name','!=', False)]}" type="object" string="Validar" class="btn btn-primary" />
-                    <button name="action_get_move_line_id" type="object" string="ver asientos" class="btn btn-primary" />
+                    <button name="action_open_wizard" type="object" string="Descargar Comprobante" class="btn btn-primary" />
                 </header>
                 <sheet>
                     <group>
@@ -111,6 +111,5 @@
     <menuitem name="Cliente" id="menu_retention_municipality_client" sequence="0" parent="menu_retention_municipality" action="action_retention_municipality_client" />
 
     <menuitem name="Proveedor" id="menu_retention_municipality_supplier" sequence="0" parent="menu_retention_municipality" action="action_retention_municipality_supplier" />
-
 
 </odoo>
