@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="binaural_ince_master_view_form" model="ir.ui.view">
+        <field name="name">Master INCE</field>
+        <field name="model">hr.ince.master</field>
+        <field name="arch" type="xml">
+            <form string="Maestro INCE">
+                <sheet>
+                    <group>
+                        <field name="porcentaje_deduccion" />                        
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="hr_ince_master_action" model="ir.actions.act_window">
+        <field name="name">Maestro INCE</field>
+        <field name="res_model">hr.ince.master</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>        
+    </record>
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="binaural_ivss_master_view_form" model="ir.ui.view">
+        <field name="name">Master IVSS</field>
+        <field name="model">hr.ivss.master</field>
+        <field name="arch" type="xml">
+            <form string="Maestro IVSS">
+                <sheet>
+                    <group>
+                        <field name="porcentaje_deduccion" />
+                        <field name="tope_salarios" />
+                        <field name="monto_maximo" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="hr_ivss_master_action" model="ir.actions.act_window">
+        <field name="name">Maestro IVSS</field>
+        <field name="res_model">hr.ivss.master</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>        
+    </record>
+</odoo>
