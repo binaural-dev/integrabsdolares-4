@@ -45,14 +45,14 @@ class WizardMaxcamComision(models.TransientModel):
         bold = workbook.add_format({'bold': 1})
         boldWithBorder = workbook.add_format({'bold': 1, 'border': 1})
         boldWithBorderJustify = workbook.add_format(
-            {'bold': 1, 'border': 1, 'text_wrap': True ,'valign': 'top','align': 'justify'})
+            {'bold': 1, 'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'justify'})
         datos = tabla
         worksheet2 = workbook.add_worksheet(nombre)
         worksheet2.set_column('A:Z', 20)
         if company.logo_hacienda:
             logo = tools.ImageProcess(company.logo_hacienda)
             logo = logo.resize(200, 200)
-            logo = logo.image_base64() 
+            logo = logo.image_base64()
             logo_hacienda = BytesIO(base64.b64decode(logo))
             _logger.warning(logo_hacienda)
             worksheet2.insert_image('A2', "image.png", {
@@ -92,7 +92,7 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.write_rich_string(
             'A16', bold, 'RAZÓN SOCIAL: ', str(retention.partner_id.name))
         worksheet2.write_rich_string(
-            'A17', bold, 'NUMERO DE REGISTRO ÚNICO DE INFORMACIÓN FISCAL: ', str(retention.partner_id.vat))
+            'A17', bold, 'NUMERO DE REGISTRO ÚNICO DE INFORMACIÓN FISCAL: ', str(retention.partner_id.prefix_vat) + str(retention.partner_id.vat))
         worksheet2.write(
             'G17', "Periodo Fiscal", boldWithBorder)
         worksheet2.write(
@@ -108,7 +108,7 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.write_rich_string(
             'A18', bold, 'DIRECCIÓN FISCAL: ', str(retention.partner_id.street))
         worksheet2.write(
-            'D22', 'DATOS DE LA TRANSACCIÓN',bold)
+            'D22', 'DATOS DE LA TRANSACCIÓN', bold)
         worksheet2.set_row(24, 23, merge_format)
         worksheet2.set_row(24, 23, merge_format)
         columnas = list(datos.columns.values)
@@ -135,24 +135,25 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.write(
             'I'+str(col2+1), total_retained, money_format)
         boldWithBorderTop = workbook.add_format({'bold': 1, 'top': 1})
-       
+
         worksheet2.write(
             'B'+str(col2+8), 'Firma del Beneficiario', boldWithBorderTop)
-        
+
         worksheet2.write(
             'F'+str(col2+8), 'Firma del Beneficiario', boldWithBorderTop)
-        
-        signature = self.env['signature.config'].search([('active','=', True)], limit=1, order='id asc')
-        
+
+        signature = self.env['signature.config'].search(
+            [('active', '=', True)], limit=1, order='id asc')
+
         if any(signature) and signature.signature:
             logo = tools.ImageProcess(signature.signature)
             logo = logo.resize(200, 200)
-            logo = logo.image_base64() 
+            logo = logo.image_base64()
             image_signature = BytesIO(base64.b64decode(logo))
             _logger.warning(image_signature)
             worksheet2.insert_image('F'+str(col2+4), "image.png", {
                                     'image_data': image_signature})
-        
+
         workbook.close()
         data2 = data2.getvalue()
         return data2
@@ -186,7 +187,7 @@ class WizardMaxcamComision(models.TransientModel):
             else:
                 baseImponible = retention_line.invoice_id.amount_untaxed
                 impuestoMunicipal = retention_line.total_retained
-                
+
             rows = OrderedDict()
             rows.update(cols)
             rows['Nº de la Op'] = index + 1

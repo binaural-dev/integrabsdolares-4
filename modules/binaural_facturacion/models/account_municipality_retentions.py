@@ -44,6 +44,9 @@ class MunicipalityRetentions(models.Model):
                     "municipality_tax_voucher_id": self.id,
                     "municipality_tax": True
                 })
+            retention_line.invoice_id.write({
+                "municipality_tax_voucher_id": self.id,
+            })
 
         journal_id = int(self.env['ir.config_parameter'].get_param(
             'journal_municipal_retention'))
@@ -85,9 +88,9 @@ class MunicipalityRetentions(models.Model):
 
         sequence = self.get_sequence_municipality_retention()
         self.name = str(sequence)
-        
+
     def action_open_wizard(self):
-        return { 
+        return {
             'name': 'Reporte de Retenciones Municipales',
             'view_type': 'form',
             'view_mode': 'form',
