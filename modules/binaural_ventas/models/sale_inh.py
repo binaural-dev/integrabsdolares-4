@@ -103,12 +103,11 @@ class SaleOrderBinauralVentas(models.Model):
             name_foreign_currency = order.foreign_currency_id.name
             name_base_currency = 'USD' if name_foreign_currency == 'VEF' else 'VEF'
             value_rate = 0
-            
+
             if name_foreign_currency:
                 value_rate = decimal_function.getCurrencyValue(
-                rate=order.foreign_currency_rate, base_currency=name_base_currency, foreign_currency=name_foreign_currency)
+                    rate=order.foreign_currency_rate, base_currency=name_base_currency, foreign_currency=name_foreign_currency)
 
-                
             foreign_amount_untaxed = foreign_amount_tax = 0.0
             for line in order.order_line:
                 foreign_amount_untaxed += line.price_subtotal
@@ -202,7 +201,7 @@ class SaleOrderBinauralVentas(models.Model):
                                           readonly=True, store=True,
                                           help='Utility field to express amount currency')
     # Foreing cyrrency fields
-    foreign_currency_id = fields.Many2one('res.currency', default=default_alternate_currency,
+    foreign_currency_id = fields.Many2one('res.currency',string="Moneda Alterna", default=default_alternate_currency,
                                           tracking=True)
     foreign_currency_symbol = fields.Char(related="foreign_currency_id.symbol")
     foreign_currency_rate = fields.Float(string="Tasa", tracking=True)
@@ -312,10 +311,10 @@ class SaleOrderBinauralVentas(models.Model):
 
             name_foreign_currency = move.foreign_currency_id.name
             name_base_currency = 'USD' if name_foreign_currency == 'VEF' else 'VEF'
-            value_rate = 0 
+            value_rate = 0
             if name_foreign_currency:
                 value_rate = decimal_function.getCurrencyValue(
-                rate=move.foreign_currency_rate, base_currency=name_base_currency, foreign_currency=name_foreign_currency)
+                    rate=move.foreign_currency_rate, base_currency=name_base_currency, foreign_currency=name_foreign_currency)
 
             move.foreign_amount_by_group = [(
                 group.name, amounts['amount'] * value_rate,
