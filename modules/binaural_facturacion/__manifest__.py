@@ -43,6 +43,7 @@
         'views/account_municipality_retention.xml',
         'wizard/account_payment_register.xml',
         'wizard/minicipality_retentions_xlsx.xml',
+        'wizard/municipality_retentions_report_xlsx.xml',
         'report/invoice_free_form_bs.xml',
         'report/invoice_free_form.xml',
         'report/report_invoice_document_override.xml',

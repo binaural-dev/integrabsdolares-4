@@ -21,6 +21,10 @@ class MunicipalityRetentions(models.Model):
         'in_invoice', 'Factura de Proveedor')], string="Tipo de Comprobante", readonly=True)
     date_accounting = fields.Date(string="Fecha Contable")
     partner_id = fields.Many2one('res.partner', string="Razón Social")
+    state = fields.Selection([
+        ('draft', 'Borrador'),
+        ('emitted', 'Emitida'),
+        ('cancel', 'Cancelada')], string="Estado", default='draft')
     retention_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'retention_id', string="Retenciones")
 
@@ -55,12 +59,16 @@ class MunicipalityRetentions(models.Model):
 
         entries_to_post = []
 
+        sequence = self.get_sequence_municipality_retention()
+        self.name = str(sequence)
+        self.state = 'emitted'
         if self.type == 'in_invoice':
             for line in self.retention_line_ids:
                 to_post = self.env['account.move'].create({
                     'move_type': 'entry',
                     'date': self.date_accounting,
                     'journal_id': journal_id,
+                    'ref': sequence,
                     'foreign_currency_rate': line.invoice_id.foreign_currency_rate,
                     'line_ids': [
                         (0, 0, {
@@ -85,9 +93,6 @@ class MunicipalityRetentions(models.Model):
             entries_to_post[index].action_post()
             retention_line.invoice_id.js_assign_outstanding_line(
                 entries_to_post[index].line_ids[0].id)
-
-        sequence = self.get_sequence_municipality_retention()
-        self.name = str(sequence)
 
     def action_open_wizard(self):
         return {
@@ -132,14 +137,14 @@ class MunicipalityRetentionsLine(models.Model):
     municipality_id = fields.Many2one(
         'res.country.municipality', string="Municipio", related="economic_activity_id.municipality_id")
 
-    @api.constrains('total_retained', 'total_invoice', 'foreign_total_retained')
+    @ api.constrains('total_retained', 'total_invoice', 'foreign_total_retained')
     def _constraint_municipality_tax(self):
         for record in self:
             if record.total_retained == 0 or record.total_invoice == 0 or record.foreign_total_retained == 0:
                 raise ValidationError(
                     "No se puede crear una retención con valores en cero")
 
-    @api.onchange('invoice_id')
+    @ api.onchange('invoice_id')
     def default_economic_activity(self):
         if self.invoice_id:
             if not self.invoice_id.partner_id.economic_activity_id:
@@ -157,13 +162,12 @@ class MunicipalityRetentionsLine(models.Model):
             rate, currency_name, foreign_currency_name, 'CALC')
 
     def _calculate_retention(self):
-        self.total_retained = self.invoice_amount_untaxed * \
-            (self.activity_aliquot/100)
+        self.total_retained = self.invoice_amount_untaxed * (self.activity_aliquot/100)
         self.get_rate_currency(
             self.currency_id.name, self.foreign_rate)
         self.foreign_total_retained = self.get_rate_currency(
             self.currency_id.name, self.foreign_rate) * self.total_retained
 
-    @api.onchange('economic_activity_id')
+    @ api.onchange('economic_activity_id')
     def onchange_economic_activity_id(self):
         self._calculate_retention()
