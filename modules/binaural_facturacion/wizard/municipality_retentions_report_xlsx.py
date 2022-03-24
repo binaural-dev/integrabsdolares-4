@@ -51,57 +51,75 @@ class WizardMaxcamComision(models.TransientModel):
             logo = logo.resize(200, 200)
             logo = logo.image_base64()
             logo_hacienda = BytesIO(base64.b64decode(logo))
-            _logger.warning(logo_hacienda)
-            worksheet2.insert_image('A2', "image.png", {
+            worksheet2.insert_image('A1', "image.png", {
                                     'image_data': logo_hacienda})
         worksheet2.write(
             'C2', "RENDICIÓN INFORMATIVA MENSUAL DEL AGENTE DE RETENCIÓN", bold)
         worksheet2.write(
             'D4', "ALCALDÍA DE PALAVECINO", bold)
         worksheet2.write(
-            'A6', company.economic_activity_number, bold)
-        worksheet2.write(
             'A8', "AGENTE DE RETENCIÓN:", bold)
         worksheet2.write(
-            'C8', company.name, bold)
+            'C8', company.name)
         worksheet2.write(
             'A9', "NUMERO DE REGISTRO UNICO DE INFORMACION FISCAL:", bold)
         worksheet2.write(
-            'D9', str(company.partner_id.prefix_vat)+str(company.partner_id.vat), bold)
+            'D9', str(company.partner_id.prefix_vat)+str(company.partner_id.vat))
         worksheet2.write(
             'A10', "DIRECCION FISCAL:", bold)
         worksheet2.write(
-            'B10', company.street, bold)
+            'B10', company.street)
         date = current_date_format(self.date_start)
         worksheet2.write(
             'A11', "MES Y AÑO DECLARADO:", bold)
         worksheet2.write(
-            'C11', date, bold)
+            'C11', date)
         worksheet2.write(
             'A12', "FACTURA, ORDEN DE PAGO U OTRO INSTRUMENTO CONTABLE DONDE SE VERIFIQUE EL PAGO O ABONO EN CUENTA", bold)
-        
+
         worksheet2.set_row(13, 23, merge_format)
         worksheet2.set_row(13, 23, merge_format)
         columnas = list(datos.columns.values)
         columns2 = [{'header': r} for r in columnas]
-        # money_format = workbook.add_format(
-        #     {'num_format': '#,##0.00 "'+currency_symbol+'"'})
+        currency_symbol = self.env.ref('base.VEF').symbol
+        money_format = workbook.add_format(
+            {'num_format': '#,##0.00 "'+currency_symbol+'"'})
         # control_format = workbook.add_format({'align': 'center'})
-        # porcent_format = workbook.add_format({'num_format': '0.0 %'})
+        porcent_format = workbook.add_format({'num_format': '0.0 %'})
         # columns2[0].update({'format': control_format})
-        # columns2[5].update({'format': porcent_format})
+        columns2[10].update({'format': porcent_format})
         # columns2[4].update({'format': money_format})
-        # columns2[7].update({'format': money_format})
-        # columns2[8].update({'format': money_format})
+        columns2[9].update({'format': money_format})
+        columns2[11].update({'format': money_format})
 
         data = datos.values.tolist()
         col3 = len(columns2)-1
         col2 = len(data)+13
         cells = xlsxwriter.utility.xl_range(13, 0, col2, col3)
+
+        total_retained = 0
+        for col in data:
+            total_retained = col[11] + total_retained
+
+        total = 0
+        for col in data:
+            total = col[9] + total
         worksheet2.hide_gridlines(2)
         worksheet2.add_table(
             cells, {'data': data, 'total_row': True, 'columns': columns2, 'autofilter': False})
-
+        worksheet2.write(
+            'L'+str(col2+1), total_retained, money_format)
+        worksheet2.write(
+            'J'+str(col2+1), total, money_format)
+        worksheet2.write(
+            'A'+str(col2+4), "Declaro, bajo juramento la veracidad de los datos contenidos en el presente formulario, quedando sometidos a las sanciones establecidas por la ley en   caso que determiné la falsedad de algún dato suministrado.", bold)
+        worksheet2.write(
+            'A'+str(col2+5), "Agente de retención Responsable de la Declaración ____________________________________", bold)
+        worksheet2.write(
+            'A'+str(col2+6), "Cedula de Identidad ___________________________________", bold)
+        worksheet2.write(
+            'A'+str(col2+7), "Cargo: ______________________________________________", bold)
+        worksheet2.write('F'+str(col2+9), "Firma y sello", bold)
         workbook.close()
         data2 = data2.getvalue()
         return data2
@@ -140,9 +158,9 @@ class WizardMaxcamComision(models.TransientModel):
                 else:
                     baseImponible = retention_line.invoice_id.amount_untaxed
                     impuestoMunicipal = retention_line.total_retained
-                    
+
                 instrumento = ''
-                
+
                 if retention_line.invoice_id.move_type == 'in_invoice':
                     instrumento = 'F'
                 elif retention_line.invoice_id.move_type == 'in_refund':
@@ -154,9 +172,11 @@ class WizardMaxcamComision(models.TransientModel):
                 rows['Tipo de Instrumento'] = instrumento
                 rows['Monto Bruto'] = baseImponible
                 rows['Nº de Instrumento'] = retention.name
-                rows['Fecha de Emision'] = retention.date_accounting
+                rows['Fecha de Emision'] = retention.date_accounting.strftime(
+                    '%d-%m-%Y')
                 rows['Contribuyente'] = retention.partner_id.name
-                rows['R.I.F.'] = str(retention.partner_id.prefix_vat)+str(retention.partner_id.vat)
+                rows['R.I.F.'] = str(
+                    retention.partner_id.prefix_vat)+str(retention.partner_id.vat)
                 rows['Domicilio Fiscal'] = retention.partner_id.street
                 rows['Descripcion del Documento'] = retention_line.invoice_id.correlative
                 rows['Actividad Económica'] = retention_line.economic_activity_id.name
@@ -195,8 +215,11 @@ class ControllerMunicipalityRetentionXlsx(http.Controller):
         return request.make_response(filecontent,
                                      [('Content-Type', 'application/pdf'), ('Content-Length', len(filecontent)),
                                       ('Content-Disposition', content_disposition(name_document+'.xlsx'))])
+
+
 def current_date_format(date):
-    months = ("Enero", "Febrero", "Marzo", "Abri", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+    months = ("Enero", "Febrero", "Marzo", "Abri", "Mayo", "Junio", "Julio",
+              "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
     month = months[date.month - 1]
     year = date.year
     message = "{} {}".format(month, year)

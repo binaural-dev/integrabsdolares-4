@@ -18,8 +18,8 @@
                     <field name="iva_voucher_number" readonly="1" nolabel="1" force_save="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
                     <label for="islr_voucher_number" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
                     <field name="islr_voucher_number" readonly="1" nolabel="1" force_save="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
-                    <field name="municipality_tax" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
-                    <field name="municipality_tax_voucher_id" readonly="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
+                    <field name="municipality_tax" />
+                    <field name="municipality_tax_voucher_id" readonly="1" />
                 </xpath>
 
                 <xpath expr="//h1[@class='mt0']" position="after">
@@ -119,7 +119,7 @@
 
                     </page>
                     <page string="Impuestos Municipales" name="imp_municipales">
-                        <field name="municipality_retentions_line_ids">
+                        <field name="municipality_retentions_line_ids" attrs="{'readonly': ['|',('state','!=','draft'),('move_type','in',['out_invoice','out_refund'])]}">
                             <tree editable="bottom">
                                 <field name="name" />
                                 <field name="invoice_id" invisible="1" />
@@ -128,10 +128,10 @@
                                 <field name="economic_activity_id" />
                                 <field name="municipality_id" readonly="1" />
                                 <field name="activity_aliquot" />
-                                <field name="total_retained" />
+                                <field name="total_retained" readonly="1"/>
                                 <field name="foreign_total_invoice" />
                                 <field name="foreign_invoice_amount_untaxed" />
-                                <field name="foreign_total_retained" />
+                                <field name="foreign_total_retained" readonly="1" />
                             </tree>
                         </field>
                     </page>
