@@ -849,7 +849,6 @@ class AccountMoveBinauralFacturacion(models.Model):
                 if record.retention_id:
                     raise UserError(
                         "No puede facturar una retención ya emitida")
-            # _logger.warning(self.municipality_retentions_line_ids.ids)
             retention = self.env['account.municipality.retentions'].create({
                 "date_accounting": self.date,
                 "date": self.date,
@@ -857,8 +856,8 @@ class AccountMoveBinauralFacturacion(models.Model):
                 "type": "in_invoice",
                 "retention_line_ids": self.municipality_retentions_line_ids.ids
             })
-            _logger.warning("================PASO================")
-            _logger.warning(retention)
+            _logger.warning(
+                "================Retencion municipal realizada================")
             retention.with_context(from_invoice=True).action_validate()
 
         return res
