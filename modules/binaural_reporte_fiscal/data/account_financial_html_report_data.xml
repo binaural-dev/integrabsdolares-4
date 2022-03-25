@@ -9,6 +9,14 @@
             <field name="show_journal_filter" eval="True"/>
             <field name='parent_id' ref='account.account_reports_legal_statements_menu'/>
         </record>
+        <record id="account_financial_report_estado_resultado_usd" model="account.financial.html.report">
+            <field name="name">Estado de Resultado $</field>
+            <field name="analytic" eval="True"/>
+            <field name="unfold_all_filter" eval="True"/>
+            <field name="context" eval="{'USD': True}" />
+            <field name="show_journal_filter" eval="True"/>
+            <field name='parent_id' ref='account.account_reports_legal_statements_menu'/>
+        </record>
 
         <record id="account_financial_html_report_line_ingresos" model="account.financial.html.report.line">
             <field name="name">Ingresos</field>

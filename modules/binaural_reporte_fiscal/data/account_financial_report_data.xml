@@ -29,6 +29,11 @@
 		  name="Vencida por Pagar $"
 		  action="action_account_report_ap_usd"
 		  parent="account_reports.account_reports_partners_reports_menu"/>
+	<!-- <menuitem id="menu_action_account_report_ganacias_perdidas_USD" -->
+	<!-- 	  name="Ganancias y/o Perdidas $" -->
+	<!-- 	  action="action_account_report_ap_usd" -->
+	<!-- 	  parent="account_reports.account_reports_partners_reports_menu"/> -->
+
 
     </data>
 </odoo>

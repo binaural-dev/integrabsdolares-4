@@ -1,72 +1,6 @@
 from odoo import models, fields, api, _
 
 
-class AccountFinancialHtmlReportBinaural(models.Model):
-    _inherit = 'account.financial.html.report'
-
-    # def succession_report_lines(self):
-    #     lvl_account = self.env['account.financial.config.report.line'].search([], order="nro_nivel ASC")
-    #     for line in self.line_ids:
-    #         for lvl in lvl_account:
-    #             if line.account_prefi != 0:
-    #                 query = ("""SELECT id, code, length(code) 
-    #                 FROM account_account WHERE code LIKE '{prefix}%' AND length(code)={len};""").format(
-    #                     len=lvl.code_length, prefix=line.account_prefi)
-    #                 self._cr.execute(query)
-    #                 query_res = self._cr.fetchall()
-    #                 for res in query_res:
-    #                     if lvl.nro_nivel != 1:
-    #                         code = str(res[1])[0:lvl.code_length - 1]
-    #                         account_id = self.env['account.financial.html.report.line'].search([('code', '=', code)])
-    #                         parent_id = account_id.id
-    #                     else:
-    #                         parent_id = line.id
-    #                     account_line = self.env['account.financial.html.report.line'].search([('code', '=', res[1])])
-    #                     if account_line.exists():
-    #                         # se actualiza el padre
-    #                         if account_line.parent_id.id != parent_id:
-    #                             account_line.write({'parent_id': parent_id})
-
-    #                         # se comprueba si tiene grupo y es el ultimo nivel
-    #                         if account_line.groupby:
-    #                             if lvl.nro_nivel == len(lvl_account):
-    #                                 account_line.groupby = 'account_id'
-    #                             else:
-    #                                 account_line.groupby = False
-    #                     else:
-    #                         domain = (
-    #                             """[('account_id.user_type_id', 'in', {user_type}), ('account_id.code', 'like', '%{code}')]""").format(user_type=line.type_control_ids.ids, code=res[1])
-
-    #                         account_line = {
-    #                             'name': res[1],
-    #                             'code': res[1],
-    #                             'sequence': 0,
-    #                             'level': lvl.nro_nivel,
-    #                             # 'financial_report_id': financial_report_id,
-    #                             'formulas': line.formulas,
-    #                             'domain': domain,
-    #                             'green_on_positive': True,
-    #                             'figure_type': 'float',
-    #                             'show_domain': 'foldable',
-    #                             'parent_id': parent_id,
-    #                         }
-
-    #                         if lvl.nro_nivel == len(lvl_account):
-    #                             groupby = 'account_id'
-    #                             account_line.setdefault('groupby', groupby)
-    #                         self.env['account.financial.html.report.line'].create(account_line)
-
-    #     return {
-    #         'type': 'ir.actions.client',
-    #         'tag': 'display_notification',
-    #         'params': {
-    #             'type': 'info',
-    #             'message': _("Niveles de cuentas actualizadas."),
-    #             'next': {'type': 'ir.actions.act_window_close'},
-    #         }
-    #     }
-
-
 class AccountFinancialReportLineBinaural(models.Model):
     _inherit = 'account.financial.html.report.line'
 
@@ -96,6 +30,9 @@ class AccountFinancialReportLineBinaural(models.Model):
         params = []
         queries = []
 
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        usd_report = True if self._context.get("USD") else False
+
         AccountFinancialReportHtml = self.financial_report_id
         horizontal_groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])
         groupby_list = [self.groupby] + horizontal_groupby_list
@@ -112,11 +49,17 @@ class AccountFinancialReportLineBinaural(models.Model):
             line_domain = self._get_domain(new_options, parent_financial_report)
 
             tables, where_clause, where_params = AccountFinancialReportHtml._query_get(new_options, domain=line_domain)
-            currency_id = self.get_option_currency(options['currency'])
-            if currency_id != self.env.user.company_id.currency_id.id:
-                currency = 'account_move_line.foreign_currency_rate'
+
+            if foreign_currency_id == 3:
+                if usd_report:
+                    currency = "currency_table.rate"
+                else:
+                    currency = "account_move_line.inverse_rate"
             else:
-                currency = 'currency_table.rate'
+                if usd_report:
+                    currency = "account_move_line.inverse_rate"
+                else:
+                    currency = "currency_table.rate"
             queries.append('''
                 SELECT
                     ''' + (groupby_clause and '%s,' % groupby_clause) + '''
@@ -191,6 +134,9 @@ class AccountFinancialReportLineBinaural(models.Model):
         params = []
         queries = []
 
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        usd_report = True if self._context.get("USD") else False
+
         AccountFinancialReportHtml = self.financial_report_id
         groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])
         all_groupby_list = groupby_list.copy()
@@ -208,11 +154,16 @@ class AccountFinancialReportLineBinaural(models.Model):
 
             tables, where_clause, where_params = AccountFinancialReportHtml._query_get(new_options, domain=line_domain)
 
-            currency_id = self.get_option_currency(options['currency'])
-            if currency_id != self.env.user.company_id.currency_id.id:
-                currency = 'account_move_line.foreign_currency_rate'
+            if foreign_currency_id == 3:
+                if usd_report:
+                    currency = "currency_table.rate"
+                else:
+                    currency = "account_move_line.inverse_rate"
             else:
-                currency = 'currency_table.rate'
+                if usd_report:
+                    currency = "account_move_line.inverse_rate"
+                else:
+                    currency = "currency_table.rate"
             queries.append('''
                 SELECT
                     ''' + (groupby_clause and '%s,' % groupby_clause) + ''' %s AS period_index,
