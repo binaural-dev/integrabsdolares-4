@@ -26,12 +26,9 @@
     'data': [
         'security/ir.model.access.csv',
         'views/views.xml',
-        'views/templates.xml',        
-        'views/hr_faov_master.xml',
-        'views/hr_ince_master.xml',
-        'views/hr_ivss_master.xml',
-        'views/hr_paroforzoso_master.xml',
+        'views/templates.xml',                        
         'views/hr_menu_binaural.xml',
+        'views/res_config.xml'
     ],
     # only loaded in demonstration mode
     'demo': [

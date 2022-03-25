@@ -9,32 +9,5 @@
         sequence="90"
         groups="hr_payroll.group_hr_payroll_user"
     />    
-
-    <menuitem
-        id="menu_action_hr_master_faov"
-        action="hr_faov_master_action"
-        name="FAOV"
-        parent="menu_hr_master_configuration"
-        sequence="50"/>
-
-    <menuitem
-        id="menu_action_hr_master_ince"
-        action="hr_ince_master_action"
-        name="INCE"
-        parent="menu_hr_master_configuration"
-        sequence="55"/>
-
-    <menuitem
-        id="menu_action_hr_master_ivss"
-        action="hr_ivss_master_action"
-        name="IVSS"
-        parent="menu_hr_master_configuration"
-        sequence="60"/>
-
-    <menuitem
-        id="menu_action_hr_master_paroforzoso"
-        action="hr_paroforzoso_master_action"
-        name="Paro Forzoso"
-        parent="menu_hr_master_configuration"
-        sequence="65"/>
+    
 </odoo>
