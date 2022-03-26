@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','hr_payroll'],
+    'depends': ['base','account','hr_holidays','hr_payroll'],
 
     # always loaded
     'data': [
@@ -28,7 +28,8 @@
         'views/views.xml',
         'views/templates.xml',                        
         'views/hr_menu_binaural.xml',
-        'views/res_config.xml'
+        'views/res_config.xml',
+        'data/master_data.xml'
     ],
     # only loaded in demonstration mode
     'demo': [

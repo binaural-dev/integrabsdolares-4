@@ -34,6 +34,7 @@ class ResConfigSettingsBinauralNomina(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param('porcentaje_deduccion_pf',self.porcentaje_deduccion_pf)
         self.env['ir.config_parameter'].sudo().set_param('tope_salario_pf',self.tope_salario_pf)
         self.env['ir.config_parameter'].sudo().set_param('monto_maximo_pf',self.monto_maximo_pf)
+        
 
     @api.model
     def get_values(self):

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data noupdate="1">
+
+        <!-- diario con codigo SS condicionado -->
+        <function model="account.journal" name="load_master_data_journal">                                     
+        </function>
+        
+        <!-- tipo entrada de trabajo -->
+        <!-- OJO: Se usa la referencia de ausencias  -->
+        <record id="hr_work_entry_binaural_weekend" model="hr.work.entry.type">
+            <field name="name">Fin de semana</field>
+            <field name="code">FSAP01</field>
+            <field name="is_leave" eval="True" />
+            <field name="leave_type_ids" eval="[(6,0,[ref('hr_holidays.holiday_status_cl')])]" />
+            <field name="round_days">HALF</field>
+            <field name="round_days_type">DOWN</field>
+        </record>
+
+        <!-- tipo de trabajo diurno -->
+        <record id="hr_resource_calendar_diurno_40h" model="resource.calendar">
+            <field name="name">40 Horas/Semana Diurna</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="hours_per_day">8.0</field>
+            <field name="tz">America/Caracas</field>
+            <field name="full_time_required_hours">40</field>
+            <field name="attendance_ids"
+                eval="[(5, 0, 0),
+                    (0, 0, {'name': 'Lunes mañana', 'dayofweek': '0', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Lunes tarde', 'dayofweek': '0', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Martes mañana', 'dayofweek': '1', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Martes tarde', 'dayofweek': '1', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Miercoles mañana', 'dayofweek': '2', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Miercoles tarde', 'dayofweek': '2', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Jueves mañana', 'dayofweek': '3', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Jueves tarde', 'dayofweek': '3', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Viernes mañana', 'dayofweek': '4', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Viernes tarde', 'dayofweek': '4', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')})                    
+                ]"
+            />
+        </record>
+
+        <!-- tipo de estructura mensual 40 horas -->
+        <record id="structure_type_40h_month" model="hr.payroll.structure.type">
+            <field name="name">Nomina Mensual / 40 horas por semana (Diurno)</field>
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="wage_type">monthly</field>
+            <field name="default_schedule_pay">monthly</field>
+            <field name="default_resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+            <field name="default_work_entry_type_id" ref="hr_work_entry.work_entry_type_attendance" />
+        </record>
+
+        <!-- tipo de estructura quincenal 40 horas -->
+        <record id="structure_type_40h_biweekly" model="hr.payroll.structure.type">
+            <field name="name">Nomina Quincenal / 40 horas por semana (Diurno)</field>
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="wage_type">monthly</field>
+            <field name="default_schedule_pay">bi-weekly</field>
+            <field name="default_resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+            <field name="default_work_entry_type_id" ref="hr_work_entry.work_entry_type_attendance" />
+        </record>
+
+        <!-- estructura salarial Básica Mensual -->
+        <record id="structure_payroll_monthly" model="hr.payroll.structure">
+            <field name="name">Nomina Básica Mensual</field>
+            <field name="type_id" ref="structure_type_40h_month" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">monthly</field>
+        </record>
+
+        <!-- estructura salarial Vacaciones Mensual -->
+        <record id="structure_payroll_vacation_monthly" model="hr.payroll.structure">
+            <field name="name">Nomina Vacaciones Mensual</field>
+            <field name="type_id" ref="structure_type_40h_month" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">monthly</field>
+        </record>
+
+        <!-- estructura salarial Utilidades Mensual -->
+        <record id="structure_payroll_13month_monthly" model="hr.payroll.structure">
+            <field name="name">Nomina Utilidades Mensual</field>
+            <field name="type_id" ref="structure_type_40h_month" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">monthly</field>
+        </record>
+
+        <!-- estructura salarial Prestaciones Mensual -->
+        <record id="structure_payroll_prestaciones_monthly" model="hr.payroll.structure">
+            <field name="name">Nomina Prestaciones Mensual</field>
+            <field name="type_id" ref="structure_type_40h_month" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">monthly</field>
+        </record>
+
+        <!-- estructura salarial Liquidaciones Mensual -->
+        <record id="structure_payroll_liquidaciones_monthly" model="hr.payroll.structure">
+            <field name="name">Nomina Prestaciones Mensual</field>
+            <field name="type_id" ref="structure_type_40h_month" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">monthly</field>
+        </record>
+
+         <!-- estructura salarial Básica Quincenal -->
+        <record id="structure_payroll_bi_weekly" model="hr.payroll.structure">
+            <field name="name">Nomina Básica Quincenal</field>
+            <field name="type_id" ref="structure_type_40h_biweekly" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">bi-weekly</field>
+        </record>
+
+        <!-- estructura salarial Vacaciones Quincenal -->
+        <record id="structure_payroll_vacation_bi_weekly" model="hr.payroll.structure">
+            <field name="name">Nomina Vacaciones Quincenal</field>
+            <field name="type_id" ref="structure_type_40h_biweekly" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">bi-weekly</field>
+        </record>
+
+        <!-- estructura salarial Utilidades Quincenal -->
+        <record id="structure_payroll_13month_bi_weekly" model="hr.payroll.structure">
+            <field name="name">Nomina Utilidades Quincenal</field>
+            <field name="type_id" ref="structure_type_40h_biweekly" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">bi-weekly</field>
+        </record>
+
+        <!-- estructura salarial Prestaciones Quincenal -->
+        <record id="structure_payroll_prestaciones_bi_weekly" model="hr.payroll.structure">
+            <field name="name">Nomina Prestaciones Quincenal</field>
+            <field name="type_id" ref="structure_type_40h_biweekly" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">bi-weekly</field>
+        </record>
+
+        <!-- estructura salarial Liquidaciones Quincenal -->
+        <record id="structure_payroll_liquidaciones_bi_weekly" model="hr.payroll.structure">
+            <field name="name">Nomina Prestaciones Quincenal</field>
+            <field name="type_id" ref="structure_type_40h_biweekly" />
+            <field name="use_worked_day_lines" eval="True" />
+            <field name="country_id" search="[('name','=','Venezuela')]"/>
+            <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
+            <field name="schedule_pay">bi-weekly</field>
+        </record>
+    </data>
+    
+
+</odoo>
