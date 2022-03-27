@@ -128,10 +128,10 @@
                                 <field name="economic_activity_id" />
                                 <field name="municipality_id" readonly="1" />
                                 <field name="activity_aliquot" />
-                                <field name="total_retained" readonly="1"/>
+                                <field name="total_retained" />
                                 <field name="foreign_total_invoice" />
                                 <field name="foreign_invoice_amount_untaxed" />
-                                <field name="foreign_total_retained" readonly="1" />
+                                <field name="foreign_total_retained"/>
                             </tree>
                         </field>
                     </page>
