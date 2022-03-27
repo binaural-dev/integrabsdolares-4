@@ -158,7 +158,10 @@ class AccountMove(models.Model):
                     "//field[@name='municipality_tax']")[0]
                 modifiers_field = json.loads(
                     municipality_field.get("modifiers") or '{}')
-                modifiers_field['invisible'] = False
+                if context['default_move_type'] in ['out_invoice', 'out_refund']:
+                    modifiers_field['invisible'] = True
+                else:
+                    modifiers_field['invisible'] = False
                 municipality_field.set(
                     'modifiers', json.dumps(modifiers_field))
 
