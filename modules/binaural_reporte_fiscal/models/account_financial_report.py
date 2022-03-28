@@ -31,7 +31,7 @@ class AccountFinancialReportLineBinaural(models.Model):
         queries = []
 
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
-        usd_report = True if self._context.get("USD") else False
+        usd_report = self.financial_report_id.usd
 
         AccountFinancialReportHtml = self.financial_report_id
         horizontal_groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])
@@ -135,7 +135,7 @@ class AccountFinancialReportLineBinaural(models.Model):
         queries = []
 
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
-        usd_report = True if self._context.get("USD") else False
+        usd_report = self.financial_report_id.usd
 
         AccountFinancialReportHtml = self.financial_report_id
         groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])

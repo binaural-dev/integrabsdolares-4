@@ -171,5 +171,99 @@
             <field name="show_domain">foldable</field>
         </record>
 
+        <!-- Estado de Situación Financiera $ -->
+        <record id="account_financial_report_sitaucion_financiera_usd" model="account.financial.html.report">
+            <field name="name">Estado de Situación Financiera $</field>
+            <field name="analytic" eval="True"/>
+            <field name="unfold_all_filter" eval="True"/>
+            <field name="show_journal_filter" eval="True"/>
+	    <field name="usd" eval="True"/>
+            <field name='parent_id' ref='account.account_reports_legal_statements_menu'/>
+        </record>
+
+        <record id="account_financial_html_report_line_activos_usd" model="account.financial.html.report.line">
+            <field name="name">Activos</field>
+            <field name="code">TA_BIN_USD</field>
+            <field name="financial_report_id" ref="account_financial_report_sitaucion_financiera_usd"/>
+            <field name="formulas">sum</field>
+            <field name="domain"
+                   eval="[('account_id.user_type_id', 'in', [
+                   ref('account.data_account_type_fixed_assets'),
+                   ref('account.data_account_type_non_current_assets'),
+                   ref('account.data_account_type_liquidity'),
+                   ref('account.data_account_type_receivable'),
+                   ref('account.data_account_type_current_assets'),
+                   ref('account.data_account_type_prepayments')])]"/>
+            <field name="level" eval="0"/>
+            <field name="sequence" eval="0"/>
+            <field name="account_prefi" eval="1"/>
+            <field name="type_control_ids" eval="[(6,0,[ref('account.data_account_type_fixed_assets'),
+                   ref('account.data_account_type_non_current_assets'),
+                   ref('account.data_account_type_liquidity'),
+                   ref('account.data_account_type_receivable'),
+                   ref('account.data_account_type_current_assets'),
+                   ref('account.data_account_type_prepayments')])]"/>
+            <field name="green_on_positive" eval="True"/>
+            <field name="groupby">account_id</field>
+            <field name="figure_type">float</field>
+            <field name="show_domain">foldable</field>
+        </record>
+
+        <record id="account_financial_html_report_line_pasivos_usd" model="account.financial.html.report.line">
+            <field name="name">Pasivos</field>
+            <field name="code">L_BIN_USD</field>
+            <field name="financial_report_id" ref="account_financial_report_sitaucion_financiera_usd"/>
+            <field name="formulas">-sum</field>
+            <field name="domain"
+                   eval="[('account_id.user_type_id', 'in', [
+                   ref('account.data_account_type_non_current_liabilities'),
+                   ref('account.data_account_type_current_liabilities'),
+                   ref('account.data_account_type_credit_card'),
+                   ref('account.data_account_type_payable')])]"/>
+            <field name="level" eval="0"/>
+            <field name="sequence" eval="1"/>
+            <field name="account_prefi" eval="2"/>
+            <field name="type_control_ids" eval="[(6,0,[ref('account.data_account_type_non_current_liabilities'),
+                   ref('account.data_account_type_current_liabilities'),
+                   ref('account.data_account_type_credit_card'),
+                   ref('account.data_account_type_payable')])]"/>
+            <field name="green_on_positive" eval="True"/>
+            <field name="groupby">account_id</field>
+            <field name="figure_type">float</field>
+            <field name="show_domain">foldable</field>
+        </record>
+
+        <record id="account_financial_html_report_line_capital_usd" model="account.financial.html.report.line">
+            <field name="name">Capital</field>
+            <field name="code">EQ_BIN_USD</field>
+            <field name="financial_report_id" ref="account_financial_report_sitaucion_financiera_usd"/>
+            <field name="formulas">-sum</field>
+            <field name="domain"
+                   eval="[('account_id.user_type_id', 'in', [
+                   ref('account.data_unaffected_earnings'),
+                   ref('account.data_account_type_equity')])]"/>
+            <field name="level" eval="0"/>
+            <field name="sequence" eval="2"/>
+            <field name="account_prefi" eval="3"/>
+            <field name="type_control_ids" eval="[(6,0,[ref('account.data_unaffected_earnings'),ref('account.data_account_type_equity')])]"/>
+            <field name="green_on_positive" eval="True"/>
+            <field name="groupby">account_id</field>
+            <field name="figure_type">float</field>
+            <field name="show_domain">foldable</field>
+        </record>
+
+        <record id="account_financial_html_report_line_apc_usd" model="account.financial.html.report.line">
+            <field name="name">Activo - (Pasivo + Capital)</field>
+            <field name="code">APC_BIN_USD</field>
+            <field name="financial_report_id" ref="account_financial_report_sitaucion_financiera_usd"/>
+            <field name="formulas">TA_BIN_USD - (L_BIN_USD + EQ_BIN_USD)</field>
+            <field name="level" eval="0"/>
+            <field name="sequence" eval="3"/>
+            <field name="account_prefi" eval="4"/>
+            <field name="green_on_positive" eval="True"/>
+            <field name="figure_type">float</field>
+            <field name="show_domain">foldable</field>
+        </record>
+
     </data>
 </odoo>
