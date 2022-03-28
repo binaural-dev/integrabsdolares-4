@@ -3,6 +3,7 @@ from datetime import date
 import xlsxwriter
 from odoo.http import request, Response
 from odoo.addons.web.controllers.main import serialize_exception, content_disposition
+from odoo.exceptions import MissingError
 from io import BytesIO
 import base64
 import logging
@@ -23,6 +24,12 @@ class WizardMaxcamComision(models.TransientModel):
     ).replace(day=1)+relativedelta(months=1, days=-1))
 
     def imprimir_excel(self):
+        retentions = self.env['account.municipality.retentions'].search(
+            [('date_accounting', '>=', self.date_start), ('date_accounting', '<=', self.date_end), ('state', '=', 'emitted'), ('type', '=', "in_invoice")], order='date_accounting asc')
+
+        if not any(retentions):
+            raise MissingError(
+                "Deben hacer Retenciones municipales emitidas en el rango de fechas, para emitir este reporte")
         return {
             'type': 'ir.actions.act_url',
             'url': '/web/get_excel_municipality_retentions_report?id=%s' % self.id,
@@ -64,7 +71,7 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.write(
             'A9', "NUMERO DE REGISTRO UNICO DE INFORMACION FISCAL:", bold)
         worksheet2.write(
-            'D9', str(company.partner_id.prefix_vat)+str(company.partner_id.vat))
+            'D9', str(company.partner_id.vat))
         worksheet2.write(
             'A10', "DIRECCION FISCAL:", bold)
         worksheet2.write(
@@ -86,6 +93,8 @@ class WizardMaxcamComision(models.TransientModel):
             {'num_format': '#,##0.00 "'+currency_symbol+'"'})
         # control_format = workbook.add_format({'align': 'center'})
         porcent_format = workbook.add_format({'num_format': '0.0 %'})
+        _logger.warning(len(columns2))
+        _logger.warning(columns2)
         # columns2[0].update({'format': control_format})
         columns2[10].update({'format': porcent_format})
         # columns2[4].update({'format': money_format})
@@ -94,7 +103,7 @@ class WizardMaxcamComision(models.TransientModel):
 
         data = datos.values.tolist()
         col3 = len(columns2)-1
-        col2 = len(data)+13
+        col2 = len(data)+14
         cells = xlsxwriter.utility.xl_range(13, 0, col2, col3)
 
         total_retained = 0
@@ -116,7 +125,7 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.write(
             'A'+str(col2+5), "Agente de retención Responsable de la Declaración ____________________________________", bold)
         worksheet2.write(
-            'A'+str(col2+6), "Cedula de Identidad ___________________________________", bold)
+            'A'+str(col2+6), "Cédula de Identidad ___________________________________", bold)
         worksheet2.write(
             'A'+str(col2+7), "Cargo: ______________________________________________", bold)
         worksheet2.write('F'+str(col2+9), "Firma y sello", bold)
@@ -127,7 +136,7 @@ class WizardMaxcamComision(models.TransientModel):
     def _get_excel_municipality_retention_report(self):
 
         retentions = self.env['account.municipality.retentions'].search(
-            [('date_accounting', '>=', self.date_start), ('date_accounting', '<=', self.date_end)], order='date_accounting asc')
+            [('date_accounting', '>=', self.date_start), ('date_accounting', '<=', self.date_end), ('state', '=', 'emitted'), ('type', '=', "in_invoice")], order='date_accounting asc')
 
         lista = []
         cols = OrderedDict([
@@ -161,9 +170,9 @@ class WizardMaxcamComision(models.TransientModel):
 
                 instrumento = ''
 
-                if retention_line.invoice_id.move_type == 'in_invoice':
+                if retention_line.invoice_id.move_type == ['in_invoice', 'out_invoice']:
                     instrumento = 'F'
-                elif retention_line.invoice_id.move_type == 'in_refund':
+                elif retention_line.invoice_id.move_type == ['in_refund', 'out_refund']:
                     instrumento = 'NC'
 
                 rows = OrderedDict()
@@ -178,7 +187,7 @@ class WizardMaxcamComision(models.TransientModel):
                 rows['R.I.F.'] = str(
                     retention.partner_id.prefix_vat)+str(retention.partner_id.vat)
                 rows['Domicilio Fiscal'] = retention.partner_id.street
-                rows['Descripcion del Documento'] = retention_line.invoice_id.correlative
+                rows['Descripcion del Documento'] = retention_line.invoice_id.name
                 rows['Actividad Económica'] = retention_line.economic_activity_id.name
                 rows['Monto Bruto'] = baseImponible
                 rows['Alícuota %'] = retention_line.activity_aliquot/100
@@ -186,7 +195,6 @@ class WizardMaxcamComision(models.TransientModel):
 
                 lista.append(rows)
                 numero += 1
-
         tabla = pandas.DataFrame(lista)
         return tabla.fillna(0)
 
