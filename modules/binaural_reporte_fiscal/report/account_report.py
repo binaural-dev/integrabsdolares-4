@@ -6,8 +6,6 @@ from odoo.tools.misc import formatLang
 class AccountReportBinaural(models.AbstractModel):
     _inherit = 'account.report'
 
-    usd = fields.Boolean(string="¿Es en $?", default=False)
-
     @api.model
     def _get_options(self, previous_options=None):
         """
@@ -49,13 +47,14 @@ class AccountReportBinaural(models.AbstractModel):
             Se agregó una condición para que se muestre el símbolo de la moneda correspondiente en
             cada reporte indistintamente de la moneda base (USD o BSF).
         '''
+        usd_report = True if self._context.get("USD") else False
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
         foreign_currency_id = self.env["res.currency"].search([("id", '=', foreign_currency_id)])
 
         if foreign_currency_id.id == 2:
-            currency_id = foreign_currency_id if self.usd else self.env.company.currency_id
+            currency_id = foreign_currency_id if usd_report else self.env.company.currency_id
         else:
-            currency_id = self.env.company.currency_id if self.usd else foreign_currency_id
+            currency_id = self.env.company.currency_id if usd_report else foreign_currency_id
 
         if currency_id.is_zero(amount):
             if blank_if_zero:

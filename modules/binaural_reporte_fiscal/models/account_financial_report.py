@@ -1,4 +1,44 @@
 from odoo import models, fields, api, _
+from odoo.tools.misc import formatLang
+
+
+class AccountFinancialReportBinaural(models.Model):
+    _inherit = "account.financial.html.report"
+
+    usd = fields.Boolean(string="¿Es en $?", default=False)
+
+    @api.model
+    def format_value(self, amount, currency=False, blank_if_zero=False):
+        ''' Format amount to have a monetary display (with a currency symbol).
+        E.g: 1000 => 1000.0 $
+
+        :param amount:          A number.
+        :param currency:        An optional res.currency record.
+        :param blank_if_zero:   An optional flag forcing the string to be empty if amount is zero.
+        :return:                The formatted amount as a string.
+
+        MODIFICACIONES BINAURAL:
+            Se agregó una condición para que se muestre el símbolo de la moneda correspondiente en
+            cada reporte indistintamente de la moneda base (USD o BSF).
+        '''
+        usd_report = True if (self._context.get("USD") or self.usd == True) else False
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        foreign_currency_id = self.env["res.currency"].search([("id", '=', foreign_currency_id)])
+
+        if foreign_currency_id.id == 2:
+            currency_id = foreign_currency_id if usd_report else self.env.company.currency_id
+        else:
+            currency_id = self.env.company.currency_id if usd_report else foreign_currency_id
+
+        if currency_id.is_zero(amount):
+            if blank_if_zero:
+                return ''
+            # don't print -0.0 in reports
+            amount = abs(amount)
+
+        if self.env.context.get('no_format'):
+            return amount
+        return formatLang(self.env, amount, currency_obj=currency_id)
 
 
 class AccountFinancialReportLineBinaural(models.Model):
@@ -209,8 +249,3 @@ class AccountFinancialReportLineBinaural(models.Model):
                 results['sum_if_neg_groupby'].setdefault(key, 0.0)
                 results['sum_if_neg_groupby'][key] += res['balance']
         return results
-
-    def get_option_currency(self, option_currency):
-        for currency in option_currency:
-            if currency.get('selected'):
-                return currency.get('id')
