@@ -925,7 +925,6 @@ class AcoountMoveLineBinauralFact(models.Model):
     foreign_currency_id = fields.Many2one(
         'res.currency', default=default_alternate_currency, )
 
-    # foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', )
     foreign_currency_rate = fields.Float(string="Tasa", digits=(16, 2), store=True,
                                          related='move_id.foreign_currency_rate')
     inverse_rate = fields.Float(string="Tasa Inversa", digits=(16,15),
