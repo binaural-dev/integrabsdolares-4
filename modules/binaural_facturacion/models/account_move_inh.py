@@ -62,7 +62,7 @@ class AccountMoveBinauralFacturacion(models.Model):
         self.inverse_rate = self.foreign_currency_rate
         for move in self:
             if foreign_currency_id == 2:
-                move.inverse_rate = 1 / move.inverse_rate
+                move.inverse_rate = 1 / move.inverse_rate if move.inverse_rate else 0
 
     def default_alternate_currency(self):
         alternate_currency = int(
