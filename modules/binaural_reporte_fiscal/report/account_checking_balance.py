@@ -86,7 +86,7 @@ class ReportAccountCheckingBalance(models.AbstractModel):
         for account, periods_results in accounts_results:
             # No comparison allowed in the General Ledger. Then, take only the first period.
             results = periods_results[0]
-            _logger.info("results********************* %s",results)
+            _logger.warning("results********************* %s",results)
 
             is_unfolded = 'account_%s' % account.id in options['unfolded_lines']
 
@@ -110,16 +110,6 @@ class ReportAccountCheckingBalance(models.AbstractModel):
             total_credit += credit
             total_balance += balance
 
-            _logger.info("hara el if =======================================================")
-            _logger.info("has lines %s",has_lines)
-            _logger.info("unfold_all %s",unfold_all)
-            _logger.info("is_unfolded %s",is_unfolded)
-            #unfold_all = True
-
-            """account_init_bal = results.get('initial_balance', {})
-                _logger.info("account_init_bal %s",account_init_bal)
-
-                cumulated_balance = account_init_bal.get('balance', 0.0) + account_un_earn.get('balance', 0.0)"""
 
             if has_lines and (unfold_all or is_unfolded):
                 _logger.info("adentro del if de has_lines y unfold all o is unfolded")
@@ -325,7 +315,6 @@ class ReportAccountCheckingBalance(models.AbstractModel):
         :param options: The report options.
         :return:        A copy of the options.
         '''
-        print("pasoooooooooooooooooooooooooooooooooooo")
         new_options = options.copy()
         fiscalyear_dates = self.env.company.compute_fiscalyear_dates(
             fields.Date.from_string(options['date']['date_from']))
@@ -354,6 +343,8 @@ class ReportAccountCheckingBalance(models.AbstractModel):
                                     with of without the load more.
         :return:                    (query, params)
         '''
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        usd_report = True if self._context.get("USD") else False
         options = options_list[0]
         unfold_all = options.get('unfold_all') or (self._context.get('print_mode') and not options['unfolded_lines'])
 
@@ -370,6 +361,12 @@ class ReportAccountCheckingBalance(models.AbstractModel):
 
         domain = [('account_id', '=', expanded_account.id)] if expanded_account else []
 
+        if (usd_report and foreign_currency_id == 2)\
+                or (not usd_report and foreign_currency_id == 3):
+            flag = True
+        else:
+            flag = False
+
         for i, options_period in enumerate(options_list):
             # The period domain is expressed as:
             # [
@@ -382,7 +379,24 @@ class ReportAccountCheckingBalance(models.AbstractModel):
             new_options = self._get_options_sum_balance(options_period)
             tables, where_clause, where_params = self._query_get(new_options, domain=domain)
             params += where_params
-            queries.append('''
+            if flag:
+                queries.append('''
+                    SELECT
+                        account_move_line.account_id                            AS groupby,
+                        'sum'                                                   AS key,
+                        MAX(account_move_line.date)                             AS max_date,
+                        %s                                                      AS period_number,
+                        COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
+                        SUM(ROUND(account_move_line.debit * account_move_line.inverse_rate, currency_table.precision))   AS debit,
+                        SUM(ROUND(account_move_line.credit * account_move_line.inverse_rate, currency_table.precision))  AS credit,
+                        SUM(ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision)) AS balance
+                    FROM %s
+                    LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                    WHERE %s
+                    GROUP BY account_move_line.account_id
+                ''' % (i, tables, ct_query, where_clause))
+            else:
+                queries.append('''
                     SELECT
                         account_move_line.account_id                            AS groupby,
                         'sum'                                                   AS key,
@@ -397,6 +411,7 @@ class ReportAccountCheckingBalance(models.AbstractModel):
                     WHERE %s
                     GROUP BY account_move_line.account_id
                 ''' % (i, tables, ct_query, where_clause))
+
 
         # ============================================
         # 2) Get sums for the unaffected earnings.
@@ -420,7 +435,24 @@ class ReportAccountCheckingBalance(models.AbstractModel):
         new_options = self._get_options_unaffected_earnings(options_period)
         tables, where_clause, where_params = self._query_get(new_options, domain=domain)
         params += where_params
-        queries.append('''
+        if flag:
+            queries.append('''
+                SELECT
+                    account_move_line.company_id                            AS groupby,
+                    'unaffected_earnings'                                   AS key,
+                    NULL                                                    AS max_date,
+                    %s                                                      AS period_number,
+                    COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
+                    SUM(ROUND(account_move_line.debit * account_move_line.inverse_rate, currency_table.precision))   AS debit,
+                    SUM(ROUND(account_move_line.credit * account_move_line.inverse_rate, currency_table.precision))  AS credit,
+                    SUM(ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision)) AS balance
+                FROM %s
+                LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                WHERE %s
+                GROUP BY account_move_line.company_id
+            ''' % (i, tables, ct_query, where_clause))
+        else:
+            queries.append('''
                 SELECT
                     account_move_line.company_id                            AS groupby,
                     'unaffected_earnings'                                   AS key,
@@ -461,7 +493,24 @@ class ReportAccountCheckingBalance(models.AbstractModel):
                 new_options = self._get_options_initial_balance(options_period)
                 tables, where_clause, where_params = self._query_get(new_options, domain=domain)
                 params += where_params
-                queries.append('''
+                if flag:
+                    queries.append('''
+                        SELECT
+                            account_move_line.account_id                            AS groupby,
+                            'initial_balance'                                       AS key,
+                            NULL                                                    AS max_date,
+                            %s                                                      AS period_number,
+                            COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
+                            SUM(ROUND(account_move_line.debit * account_move_line.inverse_rate, currency_table.precision))   AS debit,
+                            SUM(ROUND(account_move_line.credit * account_move_line.inverse_rate, currency_table.precision))  AS credit,
+                            SUM(ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision)) AS balance
+                        FROM %s
+                        LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                        WHERE %s
+                        GROUP BY account_move_line.account_id
+                    ''' % (i, tables, ct_query, where_clause))
+                else:
+                    queries.append('''
                         SELECT
                             account_move_line.account_id                            AS groupby,
                             'initial_balance'                                       AS key,
@@ -476,7 +525,7 @@ class ReportAccountCheckingBalance(models.AbstractModel):
                         WHERE %s
                         GROUP BY account_move_line.account_id
                     ''' % (i, tables, ct_query, where_clause))
-
+                    
         # ============================================
         # 4) Get sums for the tax declaration.
         # ============================================
@@ -486,7 +535,38 @@ class ReportAccountCheckingBalance(models.AbstractModel):
             for i, options_period in enumerate(options_list):
                 tables, where_clause, where_params = self._query_get(options_period)
                 params += where_params + where_params
-                queries += ['''
+                if flag:
+                    queries += ['''
+                        SELECT
+                            tax_rel.account_tax_id                  AS groupby,
+                            'base_amount'                           AS key,
+                            NULL                                    AS max_date,
+                            %s                                      AS period_number,
+                            0.0                                     AS amount_currency,
+                            0.0                                     AS debit,
+                            0.0                                     AS credit,
+                            SUM(ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision)) AS balance
+                        FROM account_move_line_account_tax_rel tax_rel, %s
+                        LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                        WHERE account_move_line.id = tax_rel.account_move_line_id AND %s
+                        GROUP BY tax_rel.account_tax_id
+                    ''' % (i, tables, ct_query, where_clause), '''
+                        SELECT
+                        account_move_line.tax_line_id               AS groupby,
+                        'tax_amount'                                AS key,
+                            NULL                                    AS max_date,
+                            %s                                      AS period_number,
+                            0.0                                     AS amount_currency,
+                            0.0                                     AS debit,
+                            0.0                                     AS credit,
+                            SUM(ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision)) AS balance
+                        FROM %s
+                        LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                        WHERE %s
+                        GROUP BY account_move_line.tax_line_id
+                    ''' % (i, tables, ct_query, where_clause)]
+                else:
+                    queries += ['''
                         SELECT
                             tax_rel.account_tax_id                  AS groupby,
                             'base_amount'                           AS key,
@@ -528,7 +608,8 @@ class ReportAccountCheckingBalance(models.AbstractModel):
         :param limit:               The limit of the query (used by the load more).
         :return:                    (query, params)
         '''
-
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        usd_report = True if self._context.get("USD") else False
         unfold_all = options.get('unfold_all') or (self._context.get('print_mode') and not options['unfolded_lines'])
 
         # Get sums for the account move lines.
@@ -540,10 +621,54 @@ class ReportAccountCheckingBalance(models.AbstractModel):
         elif options['unfolded_lines']:
             domain = [('account_id', 'in', [int(line[8:]) for line in options['unfolded_lines']])]
 
+        if (usd_report and foreign_currency_id == 2)\
+                or (not usd_report and foreign_currency_id == 3):
+            flag = True
+        else:
+            flag = False
+
         new_options = self._force_strict_range(options)
         tables, where_clause, where_params = self._query_get(new_options, domain=domain)
         ct_query = self.env['res.currency']._get_query_currency_table(options)
-        query = '''
+        if flag:
+            query = '''
+                SELECT
+                    account_move_line.id,
+                    account_move_line.date,
+                    account_move_line.date_maturity,
+                    account_move_line.name,
+                    account_move_line.ref,
+                    account_move_line.company_id,
+                    account_move_line.account_id,
+                    account_move_line.payment_id,
+                    account_move_line.partner_id,
+                    account_move_line.currency_id,
+                    account_move_line.amount_currency,
+                    ROUND(account_move_line.debit * account_move_line.inverse_rate, currency_table.precision)   AS debit,
+                    ROUND(account_move_line.credit * account_move_line.inverse_rate, currency_table.precision)  AS credit,
+                    ROUND(account_move_line.balance * account_move_line.inverse_rate, currency_table.precision) AS balance,
+                    account_move_line__move_id.name         AS move_name,
+                    company.currency_id                     AS company_currency_id,
+                    partner.name                            AS partner_name,
+                    account_move_line__move_id.move_type         AS move_type,
+                    account.code                            AS account_code,
+                    account.name                            AS account_name,
+                    journal.code                            AS journal_code,
+                    journal.name                            AS journal_name,
+                    full_rec.name                           AS full_rec_name
+                FROM account_move_line
+                LEFT JOIN account_move account_move_line__move_id ON account_move_line__move_id.id = account_move_line.move_id
+                LEFT JOIN %s ON currency_table.company_id = account_move_line.company_id
+                LEFT JOIN res_company company               ON company.id = account_move_line.company_id
+                LEFT JOIN res_partner partner               ON partner.id = account_move_line.partner_id
+                LEFT JOIN account_account account           ON account.id = account_move_line.account_id
+                LEFT JOIN account_journal journal           ON journal.id = account_move_line.journal_id
+                LEFT JOIN account_full_reconcile full_rec   ON full_rec.id = account_move_line.full_reconcile_id
+                WHERE %s
+                ORDER BY account_move_line.date, account_move_line.id
+            ''' % (ct_query, where_clause)
+        else:
+            query = '''
                 SELECT
                     account_move_line.id,
                     account_move_line.date,
