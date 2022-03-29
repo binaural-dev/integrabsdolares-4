@@ -249,3 +249,4 @@ class AccountFinancialReportLineBinaural(models.Model):
                 results['sum_if_neg_groupby'].setdefault(key, 0.0)
                 results['sum_if_neg_groupby'][key] += res['balance']
         return results
+
