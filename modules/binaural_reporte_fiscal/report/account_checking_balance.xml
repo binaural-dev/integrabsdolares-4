@@ -15,6 +15,9 @@
                        class="dropdown-item">View Journal Entry
                     </a>
                 </t>
+                <a role="menuitem" tabindex="-1" t-att-data-id="line['id']" action="open_document"
+                   class="dropdown-item">View Journal Entry
+                </a>
             </xpath>
         </template>
 
