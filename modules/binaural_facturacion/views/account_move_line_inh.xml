@@ -20,7 +20,7 @@
 		<tree position="inside">
 		    <field name="foreign_currency_rate"/>
 		    <field name="balance"/>
-		    <field name="inverse_rate"/>
+		    <field name="inverse_rate" optional="hide"/>
 		</tree>
             </field>
         </record>
