@@ -59,8 +59,8 @@ class AccountMoveBinauralFacturacion(models.Model):
     @api.depends('foreign_currency_rate')
     def _compute_inverse_rate(self):
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
-        self.inverse_rate = self.foreign_currency_rate
         for move in self:
+            move.inverse_rate = move.foreign_currency_rate
             if foreign_currency_id == 2:
                 move.inverse_rate = 1 / move.inverse_rate if move.inverse_rate else 0
 
@@ -245,6 +245,8 @@ class AccountMoveBinauralFacturacion(models.Model):
                                                   string="Comprobante de Impuesto municipal", copy=False)
     municipality_retentions_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'invoice_id', copy=False)
+    
+    financial_document = fields.Boolean(string="Doc Financiero", default=False, copy=False)
 
     @api.constrains('foreign_currency_rate')
     def _check_foreign_currency_rate(self):
