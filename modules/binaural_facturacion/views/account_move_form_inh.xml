@@ -12,7 +12,6 @@
                 </field>
 
                 <xpath expr="//div[@name='journal_div']" position="after">
-		    <field name="inverse_rate"/>
                     <label for="generate_retencion_iva" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
                     <field name="generate_retencion_iva" nolabel="1" force_save="1" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund'))]}" />
                     <label for="iva_voucher_number" attrs="{'invisible': [('move_type', 'not in', ('in_invoice','in_refund','out_invoice', 'out_refund'))]}" />
@@ -144,6 +143,7 @@
                                 <field name="foreign_currency_id" attrs="{'readonly': [('invoice_origin', '!=', False)]}" />
                                 <field name="foreign_currency_date" widget="date" /> <!--attrs="{'readonly': [('invoice_origin', '!=', False)]}"-->
                                 <field name="foreign_currency_rate" required="1" /> <!--attrs="{'readonly': [('invoice_origin', '!=', False)]}"-->
+		    		<field name="inverse_rate"/>
                             </group>
                             <group class="oe_subtotal_footer oe_right" colspan="2" name="coin_total">
                                 <field name="foreign_amount_untaxed" widget="monetary" options="{'currency_field': 'foreign_currency_id'}" />
@@ -165,6 +165,7 @@
                                 <field name="foreign_currency_id" attrs="{'readonly': [('invoice_origin', '!=', False)]}" />
                                 <field name="foreign_currency_date" widget="date" /> <!--attrs="{'readonly': [('invoice_origin', '!=', False)]}"-->
                                 <field name="foreign_currency_rate" required="1" /> <!--attrs="{'readonly': [('invoice_origin', '!=', False)]}"-->
+		    		<field name="inverse_rate"/>
                             </group>
                             <group class="oe_subtotal_footer oe_right" colspan="2" name="coin_total">
                                 <field name="foreign_amount_untaxed" widget="monetary" options="{'currency_field': 'foreign_currency_id'}" />
