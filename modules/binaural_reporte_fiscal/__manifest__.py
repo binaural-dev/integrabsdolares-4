@@ -25,6 +25,7 @@
         'binaural_facturacion',
         'binaural_facturacion_reportes',
         'binaural_ventas',
+        'purchase_enterprise',
         'sale_enterprise',
     ],
 
@@ -46,6 +47,7 @@
         'views/account_report_view.xml',
         'views/account_invoice_report.xml',
         'views/sale_report.xml',
+        'views/purchase_report.xml',
         'wizard/txt_wizard.xml',
         'wizard/arcv_wizard.xml',
     ],
