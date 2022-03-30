@@ -47,7 +47,13 @@ class AccountReportBinaural(models.AbstractModel):
             Se agregó una condición para que se muestre el símbolo de la moneda correspondiente en
             cada reporte indistintamente de la moneda base (USD o BSF).
         '''
-        usd_report = True if self._context.get("USD") else False
+
+        if self._name == "account.financial.html.report":
+            usd_report = True if (self._context.get("USD") or self.usd) else False
+        else:
+            usd_report = True if self._context.get("USD") else False
+
+        
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
         foreign_currency_id = self.env["res.currency"].search([("id", '=', foreign_currency_id)])
 

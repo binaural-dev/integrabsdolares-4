@@ -1,11 +1,21 @@
 from odoo import models, fields, api, _
 from odoo.tools.misc import formatLang
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountFinancialReportBinaural(models.Model):
     _inherit = "account.financial.html.report"
 
     usd = fields.Boolean(string="¿Es en $?", default=False)
+
+
+class AccountFinancialReportLineBinaural(models.Model):
+    _inherit = 'account.financial.html.report.line'
+
+    account_prefi = fields.Integer(string="Prefijo")
+    type_control_ids = fields.Many2many('account.account.type', string='Tipo cuenta')
 
     @api.model
     def format_value(self, amount, currency=False, blank_if_zero=False):
@@ -21,7 +31,10 @@ class AccountFinancialReportBinaural(models.Model):
             Se agregó una condición para que se muestre el símbolo de la moneda correspondiente en
             cada reporte indistintamente de la moneda base (USD o BSF).
         '''
-        usd_report = True if (self._context.get("USD") or self.usd == True) else False
+        parent_financial_report = self._get_financial_report()
+
+        usd_report = True if (self._context.get("USD") or parent_financial_report.usd) else False
+
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
         foreign_currency_id = self.env["res.currency"].search([("id", '=', foreign_currency_id)])
 
@@ -40,12 +53,6 @@ class AccountFinancialReportBinaural(models.Model):
             return amount
         return formatLang(self.env, amount, currency_obj=currency_id)
 
-
-class AccountFinancialReportLineBinaural(models.Model):
-    _inherit = 'account.financial.html.report.line'
-
-    account_prefi = fields.Integer(string="Prefijo")
-    type_control_ids = fields.Many2many('account.account.type', string='Tipo cuenta')
 
     def _compute_amls_results(self, options_list, calling_financial_report=None, sign=1):
         ''' Compute the results for the unfolded lines by taking care about the line order and the group by filter.
@@ -66,12 +73,13 @@ class AccountFinancialReportLineBinaural(models.Model):
         :param sign:                        1 or -1 to get negative values in case of '-sum' formula.
         :return:                            A list (groupby_key, display_name, {key: <balance>...}).
         '''
+        _logger.warning("USD CONTEXT:")
+        _logger.warning(self.env.context.get("USD"))
         self.ensure_one()
         params = []
         queries = []
 
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
-        usd_report = self.financial_report_id.usd
 
         AccountFinancialReportHtml = self.financial_report_id
         horizontal_groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])
@@ -81,6 +89,7 @@ class AccountFinancialReportLineBinaural(models.Model):
 
         ct_query = self.env['res.currency']._get_query_currency_table(options_list[0])
         parent_financial_report = self._get_financial_report()
+        usd_report = parent_financial_report.usd
 
         # Prepare a query by period as the date is different for each comparison.
 
@@ -170,12 +179,13 @@ class AccountFinancialReportLineBinaural(models.Model):
         :param calling_financial_report:    The financial report called by the user to be rendered.
         :return:                            A python dictionary.
         '''
+        _logger.warning("USD CONTEXT:")
+        _logger.warning(self.env.context.get("USD"))
         self.ensure_one()
         params = []
         queries = []
 
         foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
-        usd_report = self.financial_report_id.usd
 
         AccountFinancialReportHtml = self.financial_report_id
         groupby_list = AccountFinancialReportHtml._get_options_groupby_fields(options_list[0])
@@ -186,6 +196,8 @@ class AccountFinancialReportLineBinaural(models.Model):
         groupby_clause = ','.join('account_move_line.%s' % gb for gb in all_groupby_list)
         ct_query = self.env['res.currency']._get_query_currency_table(options_list[0])
         parent_financial_report = self._get_financial_report()
+
+        usd_report = parent_financial_report.usd
 
         # Prepare a query by period as the date is different for each comparison.
         for i, options in enumerate(options_list):
@@ -249,3 +261,4 @@ class AccountFinancialReportLineBinaural(models.Model):
                 results['sum_if_neg_groupby'].setdefault(key, 0.0)
                 results['sum_if_neg_groupby'][key] += res['balance']
         return results
+
