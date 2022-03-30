@@ -56,6 +56,14 @@ class AccountMoveBinauralFacturacion(models.Model):
                         'foreign_currency_rate': 0.00,
                     })
 
+    @api.depends('foreign_currency_rate')
+    def _compute_inverse_rate(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        self.inverse_rate = self.foreign_currency_rate
+        for move in self:
+            if foreign_currency_id == 2:
+                move.inverse_rate = 1 / move.inverse_rate if move.inverse_rate else 0
+
     def default_alternate_currency(self):
         alternate_currency = int(
             self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
@@ -203,7 +211,9 @@ class AccountMoveBinauralFacturacion(models.Model):
     foreign_currency_id = fields.Many2one('res.currency', default=default_alternate_currency,
                                           )
     foreign_currency_symbol = fields.Char(related="foreign_currency_id.symbol")
-    foreign_currency_rate = fields.Float(string="Tasa",tracking=2 )
+    foreign_currency_rate = fields.Float(string="Tasa", tracking=2)
+    inverse_rate = fields.Float(string="Tasa Inversa", digits=(16,15),
+                                compute="_compute_inverse_rate", store=True)
     foreign_currency_date = fields.Date(
         string="Fecha", default=fields.Date.today(), )
 
@@ -799,7 +809,6 @@ class AccountMoveBinauralFacturacion(models.Model):
 
     @api.onchange('foreign_currency_rate')
     def _onchange_rate(self):
-        _logger.info("cambioooooooooooooooooooooooo")
         for a in self:
             if a.move_type == 'entry':
                 for l in a.line_ids:
@@ -915,9 +924,10 @@ class AcoountMoveLineBinauralFact(models.Model):
     foreign_currency_id = fields.Many2one(
         'res.currency', default=default_alternate_currency, )
 
-    # foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', )
-    foreign_currency_rate = fields.Float(string="Tasa", related='move_id.foreign_currency_rate', digits=(16, 2),
-                                         store=True)
+    foreign_currency_rate = fields.Float(string="Tasa", digits=(16, 2), store=True,
+                                         related='move_id.foreign_currency_rate')
+    inverse_rate = fields.Float(string="Tasa Inversa", digits=(16,15),
+                                related="move_id.inverse_rate", store=True)
 
     def reconcile(self):
         ''' Reconcile the current move lines all together.
