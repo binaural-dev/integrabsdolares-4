@@ -2,23 +2,19 @@ from lxml import etree
 from odoo import api, fields, models
 
 
-class AccountInvoiceReport(models.Model):
-    _inherit = "account.invoice.report"
-
+class SaleReport(models.Model):
+    _inherit = "sale.report"
 
     foreign_amount_untaxed = fields.Float(string="Base imponible alterna")
     foreign_amount_tax = fields.Float(string="Impuesto Alterno")
     foreign_amount_total = fields.Float(string="Total facturado alterno")
 
-    _depends = {
-        "account.move": [
-            "foreign_amount_untaxed", "foreign_amount_tax", "foreign_amount_total",
-        ],
-    }
-
-    @api.model
-    def _select(self):
-        return super()._select() + ", move.foreign_amount_untaxed, move.foreign_amount_tax, move.foreign_amount_total"
+    def _query(self, with_clause="", fields={}, groupby="", from_clause=""):
+        fields["foreign_amount_untaxed"] = ", s.foreign_amount_untaxed AS foreign_amount_untaxed"
+        fields["foreign_amount_tax"] = ", s.foreign_amount_tax AS foreign_amount_tax"
+        fields["foreign_amount_total"] = ", s.foreign_amount_total AS foreign_amount_total"
+        groupby += ", s.foreign_amount_untaxed, s.foreign_amount_tax, s.foreign_amount_total"
+        return super()._query(with_clause, fields, groupby, from_clause)
 
     @api.model
     def fields_view_get(self, view_id=None, view_type=False, toolbar=False, submenu=False):
@@ -42,6 +38,25 @@ class AccountInvoiceReport(models.Model):
                 "//field[@name='foreign_amount_total']")
             if foreign_amount_total:
                     foreign_amount_total[0].set("string", "Total Moneda $")
+                    res["arch"] = etree.tostring(doc, encoding="unicode")
+
+            if view_type == "dashboard":
+                doc = etree.XML(res["arch"])
+
+                foreign_amount_total_all = doc.xpath(
+                    "//aggregate[@name='foreign_amount_total_all']")
+                if foreign_amount_total_all:
+                    foreign_amount_total_all[0].set("string", "Ventas totales $")
+                    res["arch"] = etree.tostring(doc, encoding="unicode")
+                foreign_amount_untaxed_all = doc.xpath(
+                    "//aggregate[@name='foreign_amount_untaxed_all']")
+                if foreign_amount_untaxed_all:
+                    foreign_amount_untaxed_all[0].set("string", "Total libre de impuestos $")
+                    res["arch"] = etree.tostring(doc, encoding="unicode")
+                foreign_amount_tax_all = doc.xpath(
+                    "//aggregate[@name='foreign_amount_tax_all']")
+                if foreign_amount_tax_all:
+                    foreign_amount_tax_all[0].set("string", "Total impuestos $")
                     res["arch"] = etree.tostring(doc, encoding="unicode")
         else:
             doc = etree.XML(res["arch"])

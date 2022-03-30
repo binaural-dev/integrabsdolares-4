@@ -5,3 +5,4 @@ from . import account_report
 from . import account_report_coa
 from . import report_arcv
 from . import report_retention_iva_voucher
+from . import sale_report

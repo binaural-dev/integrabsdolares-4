@@ -19,7 +19,14 @@
     'version': '14.0.1.0.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['binaural_facturacion', 'account_reports', 'binaural_facturacion_reportes'],
+    'depends': [
+        'account_reports',
+        'binaural_compras',
+        'binaural_facturacion',
+        'binaural_facturacion_reportes',
+        'binaural_ventas',
+        'sale_enterprise',
+    ],
 
     # always loaded
     'data': [
@@ -38,6 +45,7 @@
         'views/account_financial_config_report_line.xml',
         'views/account_report_view.xml',
         'views/account_invoice_report.xml',
+        'views/sale_report.xml',
         'wizard/txt_wizard.xml',
         'wizard/arcv_wizard.xml',
     ],
