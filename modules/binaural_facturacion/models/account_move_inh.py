@@ -112,7 +112,7 @@ class AccountMoveBinauralFacturacion(models.Model):
         if alternate_currency:
             currency = self.env['res.currency.rate'].search([('currency_id', '=', alternate_currency)], limit=1,
                                                             order='name desc')
-            rate = currency.rate
+            rate = currency.rate if currency.currency_id.name == 'VEF' else currency.vef_rate
 
         return rate
 
@@ -211,7 +211,7 @@ class AccountMoveBinauralFacturacion(models.Model):
     foreign_currency_id = fields.Many2one('res.currency', default=default_alternate_currency,
                                           )
     foreign_currency_symbol = fields.Char(related="foreign_currency_id.symbol")
-    foreign_currency_rate = fields.Float(string="Tasa", )
+    foreign_currency_rate = fields.Float(string="Tasa", tracking=2)
     inverse_rate = fields.Float(string="Tasa Inversa", digits=(16,15),
                                 compute="_compute_inverse_rate", store=True)
     foreign_currency_date = fields.Date(
