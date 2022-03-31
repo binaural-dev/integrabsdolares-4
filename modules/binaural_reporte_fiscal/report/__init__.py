@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from . import account_checking_balance
+from . import account_report_coa_binaural
 from . import account_invoice_report
 from . import account_report
 from . import account_report_coa
