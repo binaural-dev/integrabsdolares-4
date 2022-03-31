@@ -94,8 +94,8 @@ class WizardMaxcamComision(models.TransientModel):
         worksheet2.add_table(
             cells, {'data': data, 'total_row': True, 'columns': columns2, 'autofilter': False})
 
-        worksheet2.write('F'+str(col2+1), nc_financial,money_format)
-        worksheet2.write('G'+str(col2+1), nd_financial,money_format)
+        worksheet2.write('F'+str(col2+1), nc_financial, money_format)
+        worksheet2.write('G'+str(col2+1), nd_financial, money_format)
 
         worksheet2.write_array_formula(
             'D'+str(col2+1), f'=SUM(D2:D{col2})', money_format)
@@ -151,20 +151,27 @@ class WizardMaxcamComision(models.TransientModel):
             lambda l: any(l.product_id.categ_id.ciu))
 
         groups = {}
+        company_currency = self.env.company.currency_id.name
 
         for line in invoice_lines:
+            price_unit = 0
+
+            if company_currency == 'USD':
+                price_unit = line.foreign_price_unit
+            else:
+                price_unit = line.price_unit
             if not line.product_id.categ_id.name in groups.keys():
                 groups[line.product_id.categ_id.name] = {
                     "CIU": line.product_id.categ_id.ciu.name,
-                    "sales_total": line.price_unit if line.move_id.move_type == 'out_invoice' else 0,
-                    "refund_total": line.price_unit if line.move_id.move_type == 'out_refund' else 0,
+                    "sales_total": price_unit if line.move_id.move_type == 'out_invoice' else 0,
+                    "refund_total": price_unit if line.move_id.move_type == 'out_refund' else 0,
                     "aliquot": line.product_id.categ_id.ciu.aliquot,
                     "minimum_monthly": line.product_id.categ_id.ciu.minimum_monthly,
                 }
                 continue
 
-            groups[line.product_id.categ_id.name]["sales_total"] += line.price_unit if line.move_id.move_type == 'out_invoice' else 0
-            groups[line.product_id.categ_id.name]["refund_total"] += line.price_unit if line.move_id.move_type == 'out_refund' else 0
+            groups[line.product_id.categ_id.name]["sales_total"] += price_unit if line.move_id.move_type == 'out_invoice' else 0
+            groups[line.product_id.categ_id.name]["refund_total"] += price_unit if line.move_id.move_type == 'out_refund' else 0
 
         _logger.warning(groups)
 
