@@ -51,7 +51,7 @@
 
                 </field>
                 <field name="payment_reference" position="after">
-                    <field name="financial_document" attrs="{'invisible':[('move_type','not in',['out_refund'])]}" />
+                    <field name="financial_document" attrs="{'invisible':[('move_type','not in',['out_refund','out_invoice'])]}" />
                 </field>
 
                 <field name="amount_by_group" position="before">
