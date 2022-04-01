@@ -1,4 +1,5 @@
-from odoo import models, fields, api, _
+import json
+from odoo import models, api, _
 from collections import OrderedDict
 from odoo.tools.misc import formatLang
 
@@ -71,3 +72,91 @@ class AccountReportBinaural(models.AbstractModel):
         if self.env.context.get('no_format'):
             return amount
         return formatLang(self.env, amount, currency_obj=currency_id)
+
+    def print_pdf(self, options):
+        usd_report = True if self._context.get("USD") else False
+        if usd_report:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                            'options': json.dumps(options),
+                            'output_format': 'pdf',
+                            'USD': usd_report,
+                            'financial_id': self.env.context.get('id'),
+                            }
+                    }
+        else:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                            'options': json.dumps(options),
+                            'output_format': 'pdf',
+                            'financial_id': self.env.context.get('id'),
+                            }
+                    }
+
+    def print_xlsx(self, options):
+        usd_report = True if self._context.get("USD") else False
+        if usd_report:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'xlsx',
+                             'USD': usd_report,
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
+        else:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'xlsx',
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
+
+    def print_xml(self, options):
+        usd_report = True if self._context.get("USD") else False
+        if usd_report:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'xml',
+                             'USD': usd_report,
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
+        else:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'xml',
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
+
+    def print_txt(self, options):
+        usd_report = True if self._context.get("USD") else False
+        if usd_report:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'txt',
+                             'USD': usd_report,
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
+        else:
+            return {
+                    'type': 'ir_actions_account_report_download',
+                    'data': {'model': self.env.context.get('model'),
+                             'options': json.dumps(options),
+                             'output_format': 'txt',
+                             'financial_id': self.env.context.get('id'),
+                             }
+                    }
