@@ -48,7 +48,7 @@
         'report/invoice_free_form_bs.xml',
         'report/invoice_free_form.xml',
         'report/report_invoice_document_override.xml',
-        'report/product_category_views.xml',
+        'views/product_category_views.xml',
 
     ],
     # only loaded in demonstration mode
