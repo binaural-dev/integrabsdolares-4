@@ -3,9 +3,7 @@ from datetime import date
 import xlsxwriter
 from odoo.http import request, Response
 from odoo.addons.web.controllers.main import serialize_exception, content_disposition
-from odoo.exceptions import MissingError
 from io import BytesIO
-import base64
 import logging
 import pandas
 from collections import OrderedDict
@@ -13,7 +11,6 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
-
 
 class WizardMaxcamComision(models.TransientModel):
     _name = 'wizard.municipality.retentions.patent.report'
@@ -53,9 +50,7 @@ class WizardMaxcamComision(models.TransientModel):
         currency_symbol = self.env.ref('base.VEF').symbol
         money_format = workbook.add_format(
             {'num_format': '#,##0.00 "'+currency_symbol+'"'})
-        # control_format = workbook.add_format({'align': 'center'})
-        porcent_format = workbook.add_format({'num_format': '0.0 %'})
-
+        _logger.warning(columns2)
         columns2[3].update({'format': money_format})
         columns2[4].update({'format': money_format})
         columns2[5].update({'format': money_format})
@@ -73,17 +68,22 @@ class WizardMaxcamComision(models.TransientModel):
 
         invoice_lines = invoice_lines.filtered(
             lambda l: l.price_unit > 0)
+        company_currency = self.env.company.currency_id.name
 
         nc_financial = 0
         nd_financial = 0
 
         for line in invoice_lines:
-            _logger.warning(line.price_unit)
-            _logger.warning(line.move_id.financial_document)
             if line.move_id.move_type == 'out_refund':
-                nc_financial += line.price_unit
+                if company_currency == 'USD':
+                    nc_financial += line.foreign_price_unit
+                else:
+                    nc_financial += line.price_unit
             if line.move_id.move_type == 'out_invoice':
-                nd_financial += line.price_unit
+                if company_currency == 'USD':
+                    nd_financial += line.foreign_price_unit
+                else:
+                    nd_financial += line.price_unit
 
         data = datos.values.tolist()
         col3 = len(columns2)-1
