@@ -54,43 +54,66 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
 
     @api.onchange('retention_amount')
     def _onchange_retention_amount(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')], limit=1)
         for record in self:
-            if record.retention_amount > record.iva_amount and record.retention_id.type_retention in ['iva']:
-                return {
-                    'warning': {
-                        'title': 'El monto retenido excedende',
-                        'message': 'El monto a retener no debe superar al IVA de la factura, por favor verificar'
-                    },
-                    'value': {
-                        'retention_amount': 0
-                    },
-                
-                }
-            #TODO: evaluar posibilidad de crear configuracion para decimales de retenciones            
-            if float_compare(record.retention_amount,record.invoice_id.amount_residual,precision_digits=2) == 1 and record.retention_id:
-                return {
-                    'warning': {
-                        'title': 'El monto retenido excedende',
-                        'message': 'El monto a retener no debe superar el monto adeudado de la factura, por favor verificar'
-                    },
-                    'value': {
-                        'retention_amount': 0
-                    },
-        
-                }
-            record.foreign_retention_amount = record.retention_amount * record.foreign_currency_rate
+            if not self.env.context.get("noonchange"):
+                if foreign_currency_id == 2:
+                    value_rate = decimal_function.getCurrencyValue(
+                        rate=record.invoice_id.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
+                    if record.retention_amount > record.iva_amount and record.retention_id.type_retention in ['iva']:
+                        return {
+                            'warning': {
+                                'title': 'El monto retenido excedende',
+                                'message': 'El monto a retener no debe superar al IVA de la factura, por favor verificar'
+                            },
+                            'value': {
+                                'retention_amount': 0
+                            },
+                        }
+                    if float_compare(record.retention_amount,record.invoice_id.amount_residual,precision_digits=2) == 1 and record.retention_id:
+                        return {
+                            'warning': {
+                                'title': 'El monto retenido excedende',
+                                'message': 'El monto a retener no debe superar el monto adeudado de la factura, por favor verificar'
+                            },
+                            'value': {
+                                'retention_amount': 0
+                            },
+                        }
+                    record.foreign_retention_amount = record.retention_amount * value_rate
+                elif foreign_currency_id == 3:
+                    value_rate = decimal_function.getCurrencyValue(
+                        rate=record.invoice_id.foreign_currency_rate, base_currency="USD", foreign_currency="VEF")
+                    _logger.warning(value_rate)
+                    record.foreign_retention_amount = record.retention_amount * value_rate
+            self.env.context = self.with_context(noonchange=True).env.context
 
     @api.onchange('porcentage_retention')
     def _onchange_porcentage_retention(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
         for record in self:
-            return {
-                'value': {
-                    'retention_amount': record.facture_amount * (record.porcentage_retention/100)
-                },
-            }
+            if foreign_currency_id == 3:
+                return {
+                    'value': {
+                        'retention_amount': record.facture_amount * (record.porcentage_retention/100)
+                    },
+                }
+            elif foreign_currency_id == 2:
+                return {
+                    'value': {
+                        'foreign_retention_amount': record.facture_amount * (record.porcentage_retention/100)
+                    },
+                }
 
+    @api.onchange("payment_concept_id")
     @api.depends('payment_concept_id', 'invoice_id')
     def _get_value_related(self):
+        self.related_tariff_id = None
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')], limit=1)
         for record in self:
             if (record.retention_id and record.retention_id.type_retention in ['islr'] and record.retention_id.type in ['in_invoice']) or (record.invoice_id and record.invoice_id.move_type in ['in_invoice', 'in_refund'] and not record.retention_id):
                 currency_ut = self.env.ref('base.VEF')
@@ -101,17 +124,15 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
                 if record.payment_concept_id:
                     for line in record.payment_concept_id.line_payment_concept_ids:
                         if record.invoice_id.partner_id.type_person_ids.id == line.type_person_ids.id:
-                            if record.company_currency_id.id == currency_ut.id:
-                                amount_sustract = line.tariffs_ids.amount_sustract
-                                from_pay = line.pay_from
-                            else:
-                                amount_sustract = (line.tariffs_ids.amount_sustract / record.invoice_id.foreign_currency_rate) if record.invoice_id.foreign_currency_rate > 0 else 0.00
-                                from_pay = (line.pay_from / record.invoice_id.foreign_currency_rate) if record.invoice_id.foreign_currency_rate > 0 else 0.00
+                            amount_sustract = line.tariffs_ids.amount_sustract
+                            from_pay = line.pay_from
                             _logger.info('Sustraendo')
                             _logger.info(amount_sustract)
                             record.related_pay_from = from_pay
                             record.related_percentage_tax_base = line.percentage_tax_base
+                            _logger.warning(line.percentage_tax_base)
                             record.related_percentage_tariffs = line.tariffs_ids.percentage
+                            record.related_tariff_id = line.tariffs_ids.id
                             record.related_amount_sustract_tariffs = amount_sustract
                 if record.invoice_id:
                     _logger.info('invoice_idddddddddddddddddd')
@@ -122,10 +143,11 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
                     record.facture_amount = record.invoice_id.amount_untaxed
                     record.iva_amount = record.invoice_id.amount_tax
                     record.invoice_type = record.invoice_id.move_type
-                    record.foreign_facture_amount = record.invoice_id.amount_untaxed * record.invoice_id.foreign_currency_rate
-                    record.foreign_facture_total = record.invoice_id.amount_total * record.invoice_id.foreign_currency_rate
-                    record.foreign_iva_amount = record.invoice_id.amount_tax * record.invoice_id.foreign_currency_rate
+                    record.foreign_facture_amount = record.invoice_id.foreign_amount_untaxed
+                    record.foreign_facture_total = record.invoice_id.foreign_amount_total
+                    record.foreign_iva_amount = record.invoice_id.foreign_amount_tax
                     record.foreign_currency_rate = record.invoice_id.foreign_currency_rate
+            if (record.retention_id and record.retention_id.type_retention in ['islr'] and record.retention_id.type in ['in_invoice']) or (record.invoice_id and record.invoice_id.move_type in ['in_invoice', 'in_refund'] and not record.retention_id):
                 if record.payment_concept_id and record.invoice_id:
                     if record.facture_amount > record.related_pay_from:
                         _logger.info('Calculos')
@@ -133,36 +155,112 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
                         _logger.info(record.related_percentage_tax_base/100)
                         _logger.info(record.related_percentage_tariffs/100)
                         _logger.info(record.related_amount_sustract_tariffs)
-                        record.retention_amount = (record.facture_amount * (record.related_percentage_tax_base/100) * (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
-                        record.foreign_retention_amount = record.retention_amount * record.invoice_id.foreign_currency_rate
+                        if foreign_currency_id == 2:
+                            value_rate = decimal_function.getCurrencyValue(
+                                rate=record.invoice_id.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
+                            _logger.warning(record.invoice_id.foreign_currency_rate)
+                            _logger.warning(value_rate)
+
+                            record.retention_amount = (record.facture_amount * (record.related_percentage_tax_base/100) *\
+                                    (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
+
+                            _logger.warning(record.facture_amount)
+                            _logger.warning(record.related_percentage_tax_base)
+                            _logger.warning((record.facture_amount * (record.related_percentage_tax_base/100) *
+                                    (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs)
+                            record.foreign_retention_amount = record.retention_amount * value_rate
+                        elif foreign_currency_id == 3:
+                            value_rate = decimal_function.getCurrencyValue(
+                                rate=record.invoice_id.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
+                            record.foreign_retention_amount = (record.foreign_facture_amount * (record.related_percentage_tax_base/100) *\
+                                    (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
+                            record.retention_amount = record.foreign_retention_amount * value_rate
                         
     @api.onchange('facture_amount')
     def _onchange_base_islr(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')], limit=1)
+        base_currency = "VEF" if foreign_currency_id == 2 else "USD"
+        foreign_currency = "USD" if foreign_currency_id == 2 else "VEF"
         for record in self:
+            value_rate = decimal_function.getCurrencyValue(
+                rate=record.invoice_id.foreign_currency_rate, base_currency=base_currency, foreign_currency=foreign_currency)
             if (record.retention_id and record.retention_id.type_retention in ['islr'] and record.retention_id.type in [
                 'in_invoice']) or (
                     record.invoice_id and record.invoice_id.move_type in ['in_invoice', 'in_refund'] and not record.retention_id):
                 if record.payment_concept_id and record.invoice_id:
                     if record.facture_amount > record.related_pay_from:
-                        record.retention_amount = (record.facture_amount * (
-                                    record.related_percentage_tax_base / 100) * (
-                                                               record.related_percentage_tariffs / 100)) - record.related_amount_sustract_tariffs
-                record.foreign_facture_amount = record.facture_amount * record.foreign_currency_rate
+                        if foreign_currency_id == 2:
+                            record.retention_amount = (record.facture_amount * (record.related_percentage_tax_base/100) *\
+                                    (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
+                            record.foreign_retention_amount = record.retention_amount * value_rate
+                        elif foreign_currency_id == 3:
+                            record.foreign_retention_amount = (record.foreign_facture_amount * (record.related_percentage_tax_base/100) *\
+                                    (record.related_percentage_tariffs/100)) - record.related_amount_sustract_tariffs
+                            record.retention_amount = record.foreign_retention_amount * value_rate
+                record.foreign_facture_amount = record.facture_amount * value_rate
             else:
                 if record.retention_id and record.retention_id.type in ['in_invoice'] or (record.invoice_id and record.invoice_id.move_type in ['in_invoice', 'in_refund'] and not record.retention_id):
-                    record.foreign_facture_amount = record.facture_amount * record.foreign_currency_rate
+                    record.foreign_facture_amount = record.facture_amount * value_rate
+
 
     @api.onchange('foreign_facture_amount')
-    def _onchange_base_foreigh(self):
+    def _onchange_foreign_facture_amount(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')], limit=1)
+        base_currency = "VEF" if foreign_currency_id == 2 else "USD"
+        foreign_currency = "USD" if foreign_currency_id == 2 else "VEF"
         for record in self:
+            value_rate = decimal_function.getCurrencyValue(
+                rate=record.invoice_id.foreign_currency_rate, base_currency=base_currency, foreign_currency=foreign_currency)
             if record.retention_id and record.retention_id.type in ['out_invoice']:
-                record.facture_amount = record.foreign_facture_amount / record.foreign_currency_rate
+                record.facture_amount = record.foreign_facture_amount * value_rate
 
     @api.onchange('foreign_retention_amount')
-    def _onchange_base_foreigh(self):
+    def _onchange_foreigh_retention_amount(self):
+        foreign_currency_id = int(self.env['ir.config_parameter'].sudo().get_param('curreny_foreign_id'))
+        decimal_function = self.env['decimal.precision'].search(
+            [('name', '=', 'decimal_quantity')], limit=1)
         for record in self:
-            if record.retention_id and record.retention_id.type in ['out_invoice'] and record.foreign_currency_rate > 0:
-                record.retention_amount = record.foreign_retention_amount / record.foreign_currency_rate
+            if not self.env.context.get("noonchange"):
+                if record.retention_id and record.retention_id.type in ['out_invoice'] and record.foreign_currency_rate > 0:
+                    if foreign_currency_id == 3:
+                        if record.retention_amount > record.iva_amount and record.retention_id.type_retention in ['iva']:
+                            return {
+                                'warning': {
+                                    'title': 'El monto retenido excedende',
+                                    'message': 'El monto a retener no debe superar al IVA de la factura, por favor verificarc'
+                                },
+                                'value': {
+                                    'retention_amount': 0
+                                },
+                            }
+                        if float_compare(record.retention_amount,record.invoice_id.amount_residual,precision_digits=2) == 1 and record.retention_id:
+                            return {
+                                'warning': {
+                                    'title': 'El monto retenido excedende',
+                                    'message': 'El monto a retener no debe superar el monto adeudado de la factura, por favor verificarc'
+                                },
+                                'value': {
+                                    'retention_amount': 0
+                                },
+                            }
+                        value_rate = decimal_function.getCurrencyValue(
+                            rate=record.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
+                        _logger.warning(value_rate)
+                        record.retention_amount = record.foreign_retention_amount * value_rate
+                    elif foreign_currency_id == 2:
+                        value_rate = decimal_function.getCurrencyValue(
+                            rate=record.foreign_currency_rate, base_currency="VEF", foreign_currency="USD")
+                        record.foreign_retention_amount = record.retention_amount * value_rate
+            self.env.context = self.with_context(noonchange=True).env.context
+
+
+    @api.depends("currency_id")
+    def _compute_bs_currency_id(self):
+        self.bs_currency_id = 3
                 
     name = fields.Char('Descripción', size=64, select=True, required=True, default="Retención ISLR")
     currency_id = fields.Many2one(related="retention_id.company_currency_id")
@@ -197,22 +295,26 @@ class AccountRetentionBinauralLineFacturacion(models.Model):
     
     facture_amount = fields.Float(string='Base Imponible')
     facture_total = fields.Float(string='Total Facturado')
-    iva_amount = fields.Float(string='Iva factura')
+    iva_amount = fields.Float(string="IVA factura")
+    retention_amount = fields.Float(string='Monto Retenido')
     retention_amount = fields.Float(string='Monto Retenido')
 
     payment_concept_id = fields.Many2one('payment.concept', 'Concepto de pago', ondelete='cascade', select=True)
     
     #Campos para uso en ISLR
     porcentage_retention = fields.Float(string='% Retención')
+    bs_currency_id = fields.Many2one("res.currency", compute="_compute_bs_currency_id")
 
     related_pay_from = fields.Float(string='Pagos desde', compute=_get_value_related, store=True)
     related_percentage_tax_base = fields.Float(string='% Base Imponible', compute=_get_value_related, store=True)
     related_percentage_tariffs = fields.Float(string='% Tarifa', compute=_get_value_related, store=True)
     related_amount_sustract_tariffs = fields.Float(string='Sustraendo', compute=_get_value_related, store=True)
+    related_tariff_id = fields.Many2one('tarif.retention', compute=_get_value_related)
     
     # Moneda Alterna
     foreign_facture_amount = fields.Float(string='Base Imponible Anterna')
     foreign_facture_total = fields.Float(string='Total Facturado Alterno')
-    foreign_iva_amount = fields.Float(string='Iva factura Alterno')
+    foreign_iva_amount = fields.Float(string="Iva factura Alterno")
+    foreign_retention_amount = fields.Float(string='Monto Retenido Alterno')
     foreign_retention_amount = fields.Float(string='Monto Retenido Alterno')
     foreign_currency_rate = fields.Float(string="Tasa", tracking=True)
