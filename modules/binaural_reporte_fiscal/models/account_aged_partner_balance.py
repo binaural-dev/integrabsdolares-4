@@ -1,4 +1,4 @@
-from odoo import api, fields, models, _
+from odoo import models, _
 
 
 class ReportAccountAgedPartner(models.AbstractModel):
@@ -149,4 +149,3 @@ class ReportAccountAgedPartner(models.AbstractModel):
             'foreign_currency_id': foreign_currency_id,
         }
         return self.env.cr.mogrify(query, params).decode(self.env.cr.connection.encoding)
-
