@@ -6,8 +6,8 @@
         <!-- diario con codigo SS condicionado -->
         <function model="account.journal" name="load_master_data_journal">                                     
         </function>
-        
-        <!-- tipo entrada de trabajo -->
+
+         <!-- tipo entrada de trabajo -->
         <!-- OJO: Se usa la referencia de ausencias  -->
         <record id="hr_work_entry_binaural_weekend" model="hr.work.entry.type">
             <field name="name">Fin de semana</field>
@@ -17,6 +17,27 @@
             <field name="round_days">HALF</field>
             <field name="round_days_type">DOWN</field>
         </record>
+
+        <!-- OJO: Se usa la referencia de ausencias  -->
+        <record id="hr_work_entry_binaural_holiday" model="hr.work.entry.type">
+            <field name="name">Feriado de ley</field>
+            <field name="code">FLAP02</field>
+            <field name="is_leave" eval="True" />            
+            <field name="round_days">NO</field>            
+        </record>
+
+         <!-- tipo de ausencias -->
+        <record id="hr_leave_feriados" model="hr.leave.type">
+            <field name="name">Feriados de ley</field>
+            <field name="request_unit">day</field>
+            <field name="validity_start" eval="datetime.now().date().replace(month=1, day=1)" />
+            <field name="validity_stop" eval="datetime.now().date().replace(month=12, day=31)" />
+            <field name="allocation_type">fixed</field>
+            <field name="leave_validation_type">no_validation</field>
+            <field name="create_calendar_meeting" eval="True" />
+            <field name="color_name">violet</field>
+            <field name="work_entry_type_id" ref="hr_work_entry_binaural_holiday" />
+        </record>       
 
         <!-- tipo de trabajo diurno -->
         <record id="hr_resource_calendar_diurno_40h" model="resource.calendar">
@@ -36,7 +57,11 @@
                     (0, 0, {'name': 'Jueves mañana', 'dayofweek': '3', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
                     (0, 0, {'name': 'Jueves tarde', 'dayofweek': '3', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
                     (0, 0, {'name': 'Viernes mañana', 'dayofweek': '4', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
-                    (0, 0, {'name': 'Viernes tarde', 'dayofweek': '4', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')})                    
+                    (0, 0, {'name': 'Viernes tarde', 'dayofweek': '4', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
+                    (0, 0, {'name': 'Sabado mañana', 'dayofweek': '5', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry_binaural_weekend')}),
+                    (0, 0, {'name': 'Sabado tarde', 'dayofweek': '5', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry_binaural_weekend')}),
+                    (0, 0, {'name': 'Domingo mañana', 'dayofweek': '6', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry_binaural_weekend')}),
+                    (0, 0, {'name': 'Domingo tarde', 'dayofweek': '6', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon','work_entry_type_id':ref('hr_work_entry_binaural_weekend')})                    
                 ]"
             />
         </record>
@@ -49,6 +74,7 @@
             <field name="default_schedule_pay">monthly</field>
             <field name="default_resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
             <field name="default_work_entry_type_id" ref="hr_work_entry.work_entry_type_attendance" />
+            <!-- <field name="default_struct_id" ref="structure_payroll_monthly" /> este valor hay que asignarlo, buscar la forma --> 
         </record>
 
         <!-- tipo de estructura quincenal 40 horas -->
@@ -59,6 +85,7 @@
             <field name="default_schedule_pay">bi-weekly</field>
             <field name="default_resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
             <field name="default_work_entry_type_id" ref="hr_work_entry.work_entry_type_attendance" />
+            <!-- <field name="default_struct_id" ref="structure_payroll_bi_weekly" /> este valor hay que asignarlo, buscar la forma -->
         </record>
 
         <!-- estructura salarial Básica Mensual -->
@@ -79,6 +106,7 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">monthly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Utilidades Mensual -->
@@ -89,6 +117,7 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">monthly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Prestaciones Mensual -->
@@ -99,16 +128,18 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">monthly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Liquidaciones Mensual -->
         <record id="structure_payroll_liquidaciones_monthly" model="hr.payroll.structure">
-            <field name="name">Nomina Prestaciones Mensual</field>
+            <field name="name">Nomina Liquidaciones Mensual</field>
             <field name="type_id" ref="structure_type_40h_month" />
             <field name="use_worked_day_lines" eval="True" />
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">monthly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
          <!-- estructura salarial Básica Quincenal -->
@@ -129,6 +160,7 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">bi-weekly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Utilidades Quincenal -->
@@ -139,6 +171,7 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">bi-weekly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Prestaciones Quincenal -->
@@ -149,17 +182,71 @@
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">bi-weekly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
 
         <!-- estructura salarial Liquidaciones Quincenal -->
         <record id="structure_payroll_liquidaciones_bi_weekly" model="hr.payroll.structure">
-            <field name="name">Nomina Prestaciones Quincenal</field>
+            <field name="name">Nomina Liquidaciones Quincenal</field>
             <field name="type_id" ref="structure_type_40h_biweekly" />
             <field name="use_worked_day_lines" eval="True" />
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
             <field name="schedule_pay">bi-weekly</field>
+            <field name="rule_ids" eval="[]" />
         </record>
+       
+        <record id="hr_employee1" model="hr.employee">
+        <field name="name">Angelica Azuaje</field>
+      </record>
+
+      <record id="hr_employee2" model="hr.employee">
+        <field name="name">Daniela Gomez</field>
+      </record>
+
+      <record id="hr_employee3" model="hr.employee">
+        <field name="name">Miguel Gozaine</field>
+      </record>
+
+      <record id="hr_employee4" model="hr.employee">
+        <field name="name">Sahira Lacruz</field>
+      </record>
+
+      <record id="hr_contract1" model="hr.contract">
+        <field name="name">administracion</field>
+        <field name="employee_id" ref="hr_employee1" />
+        <field name="structure_type_id" ref="structure_type_40h_biweekly" />
+        <field name="date_start">2022-03-01</field>
+        <field name="resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+        <field name="wage">800</field>
+      </record>
+
+       <record id="hr_contract2" model="hr.contract">
+        <field name="name">consultoria</field>
+        <field name="employee_id" ref="hr_employee2" />
+        <field name="structure_type_id" ref="structure_type_40h_month" />
+        <field name="date_start">2022-02-01</field>
+        <field name="resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+        <field name="wage">1200</field>
+      </record>
+
+       <record id="hr_contract3" model="hr.contract">
+        <field name="name">programacion</field>
+        <field name="employee_id" ref="hr_employee3" />
+        <field name="structure_type_id" ref="structure_type_40h_month" />
+        <field name="date_start">2022-01-18</field>
+        <field name="resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+        <field name="wage">1500</field>
+      </record>
+
+       <record id="hr_contract4" model="hr.contract">
+        <field name="name">gente</field>
+        <field name="employee_id" ref="hr_employee4" />
+        <field name="structure_type_id" ref="structure_type_40h_biweekly" />
+        <field name="date_start">2022-02-01</field>
+        <field name="resource_calendar_id" ref="hr_resource_calendar_diurno_40h" />
+        <field name="wage">1800</field>
+      </record>
     </data>
     
 

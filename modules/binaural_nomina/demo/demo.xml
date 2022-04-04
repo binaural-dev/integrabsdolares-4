@@ -1,5 +1,5 @@
 <odoo>
-    <data>
+    <data>     
 <!--
           <record id="object0" model="binaural_nomina.binaural_nomina">
             <field name="name">Object 0</field>
