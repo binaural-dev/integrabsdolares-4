@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data noupdate="1">
+    
+        <!-- regla calculo IVSS estructura mensual-->
+        <record id="ivss_monthly_rule" model="hr.salary.rule">
+            <field name="name">Deducción PM - IVSS</field>
+            <field name="category_id" search="[('code','=','DED')]"/>
+            <field name="code">PM-IVSS</field>
+            <field name="struct_id" ref="structure_payroll_monthly" />
+            <field name="appears_on_payslip" eval="True" />
+            <field name="sequence">199</field>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+calculo = ((categories.BASIC*12/52)*(porc_ivss/100)) * payslip.env['hr.payslip']._compute_monday_in_range(payslip.id)
+if (calculo &lt;= (tope_ivss * salario_minimo_actual)):
+    result = -(calculo)
+else:
+    result = -(tope_ivss * salario_minimo_actual)
+            </field>
+        </record>
+
+        <!-- regla calculo FAOV estructura mensual -->
+        <record id="faov_monthly_rule" model="hr.salary.rule">
+            <field name="name">Deducción PM - FAOV</field>
+            <field name="category_id" search="[('code','=','DED')]"/>
+            <field name="code">PM-FAOV</field>
+            <field name="struct_id" ref="structure_payroll_monthly" />
+            <field name="appears_on_payslip" eval="True" />
+            <field name="sequence">200</field>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+result = -(categories.BASIC * (porc_faov/100))
+            </field>
+        </record>
+
+        <!-- regla calculo paro forzoso estructura mensual -->
+        <record id="pf_monthly_rule" model="hr.salary.rule">
+            <field name="name">Deducción PM - Paro Forzoso</field>
+            <field name="category_id" search="[('code','=','DED')]"/>
+            <field name="code">PM-PF</field>
+            <field name="struct_id" ref="structure_payroll_monthly" />
+            <field name="appears_on_payslip" eval="True" />
+            <field name="sequence">201</field>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+calculo = ((categories.BASIC*12/52)*(porc_pf/100)) * payslip.env['hr.payslip']._compute_monday_in_range(payslip.id)
+if (calculo &lt;= (tope_pf * salario_minimo_actual)):
+    result = -(calculo)
+else:
+    result = -(tope_pf * salario_minimo_actual)
+            </field>
+        </record>
+    </data>
+    
+
+</odoo>

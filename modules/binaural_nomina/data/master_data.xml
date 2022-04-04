@@ -12,17 +12,24 @@
         <record id="hr_work_entry_binaural_weekend" model="hr.work.entry.type">
             <field name="name">Fin de semana</field>
             <field name="code">FSAP01</field>
-            <field name="is_leave" eval="True" />
+            <field name="is_leave" eval="False" />
             <field name="leave_type_ids" eval="[(6,0,[ref('hr_holidays.holiday_status_cl')])]" />
-            <field name="round_days">HALF</field>
-            <field name="round_days_type">DOWN</field>
+            <field name="round_days">NO</field>            
+        </record>
+
+        <record id="hr_work_entry_binaural_extra_hours" model="hr.work.entry.type">
+            <field name="name">Horas extra</field>
+            <field name="code">HE01</field>
+            <field name="is_leave" eval="False" />
+            <field name="leave_type_ids" eval="[(6,0,[ref('hr_holidays.holiday_status_cl')])]" />
+            <field name="round_days">NO</field>            
         </record>
 
         <!-- OJO: Se usa la referencia de ausencias  -->
         <record id="hr_work_entry_binaural_holiday" model="hr.work.entry.type">
             <field name="name">Feriado de ley</field>
             <field name="code">FLAP02</field>
-            <field name="is_leave" eval="True" />            
+            <field name="is_leave" eval="False" />            
             <field name="round_days">NO</field>            
         </record>
 
@@ -45,7 +52,7 @@
             <field name="company_id" ref="base.main_company"/>
             <field name="hours_per_day">8.0</field>
             <field name="tz">America/Caracas</field>
-            <field name="full_time_required_hours">40</field>
+            <field name="full_time_required_hours">56</field> <!-- preguntar esto a daniela -->
             <field name="attendance_ids"
                 eval="[(5, 0, 0),
                     (0, 0, {'name': 'Lunes mañana', 'dayofweek': '0', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning','work_entry_type_id':ref('hr_work_entry.work_entry_type_attendance')}),
@@ -95,7 +102,7 @@
             <field name="use_worked_day_lines" eval="True" />
             <field name="country_id" search="[('name','=','Venezuela')]"/>
             <field name="report_id" search="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]" />
-            <field name="schedule_pay">monthly</field>
+            <field name="schedule_pay">monthly</field>            
         </record>
 
         <!-- estructura salarial Vacaciones Mensual -->
@@ -198,18 +205,22 @@
        
         <record id="hr_employee1" model="hr.employee">
         <field name="name">Angelica Azuaje</field>
+        <field name="tz">America/Caracas</field>
       </record>
 
       <record id="hr_employee2" model="hr.employee">
         <field name="name">Daniela Gomez</field>
+        <field name="tz">America/Caracas</field>
       </record>
 
       <record id="hr_employee3" model="hr.employee">
         <field name="name">Miguel Gozaine</field>
+        <field name="tz">America/Caracas</field>
       </record>
 
       <record id="hr_employee4" model="hr.employee">
         <field name="name">Sahira Lacruz</field>
+        <field name="tz">America/Caracas</field>
       </record>
 
       <record id="hr_contract1" model="hr.contract">

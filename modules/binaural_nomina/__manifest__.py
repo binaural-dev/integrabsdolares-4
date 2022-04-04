@@ -29,7 +29,8 @@
         'views/templates.xml',                        
         'views/hr_menu_binaural.xml',
         'views/res_config.xml',
-        'data/master_data.xml'
+        'data/master_data.xml',
+        'data/rules_data.xml'
     ],
     # only loaded in demonstration mode
     'demo': [
