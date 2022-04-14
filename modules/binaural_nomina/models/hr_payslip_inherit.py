@@ -8,14 +8,7 @@ class BinauralHrPayslipInherit(models.Model):
     _inherit = 'hr.payslip'
     _description = 'Herencia pay slip de odoo para personalizaciones Venezuela'
 
-    # def _get_localdict(self):
-    #     _logger.info('AQUI AQUI')
-    #     result = super(BinauralHrPayslipInherit, self)._get_localdict()
-    #     result.update({
-    #         'ivss': 
-    #     })
-    #     return result
-
+    #Inherit functions
     def _get_base_local_dict(self):                
         local_dict_return = super(BinauralHrPayslipInherit, self)._get_base_local_dict()
         local_dict_return.update({
@@ -28,11 +21,21 @@ class BinauralHrPayslipInherit(models.Model):
             'porc_pf': float(self.env['ir.config_parameter'].sudo().get_param('porcentaje_deduccion_pf')),
             'tope_pf': float(self.env['ir.config_parameter'].sudo().get_param('tope_salario_pf')),
             'maximo_deduccion_pf': float(self.env['ir.config_parameter'].sudo().get_param('monto_maximo_pf'))
-        })
-        _logger.info('LOCAL DIC')
-        _logger.info(self)
+        })        
         return local_dict_return
 
+    def _get_new_worked_days_lines(self):
+        if self.struct_id.use_worked_day_lines:
+            # computation of the salary worked days
+            worked_days_line_values = self._get_worked_day_lines(check_out_of_contract=False)
+            worked_days_lines = self.worked_days_line_ids.browse([])
+            for r in worked_days_line_values:
+                r['payslip_id'] = self.id
+                worked_days_lines |= worked_days_lines.new(r)
+            return worked_days_lines
+        else:
+            return [(5, False, False)]    
+            
     # def compute_sheet(self):
     #     payslips = self.filtered(lambda slip: slip.state in ['draft', 'verify'])
     #     # delete old payslip lines
@@ -43,6 +46,8 @@ class BinauralHrPayslipInherit(models.Model):
     #         payslip.write({'line_ids': lines, 'number': number, 'state': 'verify', 'compute_date': fields.Date.today()})
     #     return True
 
+
+    ## FUNCIONES PARA REGLAS
     def _compute_monday_in_range(self, id):        
         count = 0
 
@@ -60,3 +65,5 @@ class BinauralHrPayslipInherit(models.Model):
             raise UserWarning('Debe agregar un id de hr.payslip para el calculo de lunes')
                 
         return count
+
+
