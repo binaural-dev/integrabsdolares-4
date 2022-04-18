@@ -1,5 +1,6 @@
 from datetime import  date
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -28,13 +29,42 @@ class BinauralHrPayslipInherit(models.Model):
         if self.struct_id.use_worked_day_lines:
             # computation of the salary worked days
             worked_days_line_values = self._get_worked_day_lines(check_out_of_contract=False)
-            worked_days_lines = self.worked_days_line_ids.browse([])
+            worked_days_lines = self.worked_days_line_ids.browse([])            
             for r in worked_days_line_values:
                 r['payslip_id'] = self.id
-                worked_days_lines |= worked_days_lines.new(r)
+                worked_days_lines |= worked_days_lines.new(r)                
             return worked_days_lines
         else:
             return [(5, False, False)]    
+
+    def action_payslip_done(self):
+        
+        payslip_done_name = []
+        message = ''
+        for item in self:            
+            payslips_done = self.env['hr.payslip'].search([
+                ('date_from','=',self.date_from),
+                # ('date_to','=',self.date_to),
+                ('employee_id','=',item.employee_id.id),
+                ('contract_id','=',item.contract_id.id),
+                ('struct_id','=',item.struct_id.id),
+                ('state','=','done')
+            ])
+
+            if payslips_done:
+                payslip_done_name.append(item.number)                            
+
+        if len(payslip_done_name) == 0:
+            super(BinauralHrPayslipInherit, self).action_payslip_done()
+        elif len(payslip_done_name) == 1:
+            message = 'El recibo %s tiene las mismas caracteristicas (contrato y estructura), verifique la informacion e intente nuevamente' % (payslip_done_name[0])
+            raise UserError(message)
+        else:
+            message = 'Los recibios %s tiene las mismas caracteristicas (contrato y estructura), verifique la informacion e intente nuevamente' % (", ".join(payslip_done_name))            
+            raise UserError(message)
+            
+
+
             
     # def compute_sheet(self):
     #     payslips = self.filtered(lambda slip: slip.state in ['draft', 'verify'])
