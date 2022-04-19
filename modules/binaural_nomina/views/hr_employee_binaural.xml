@@ -15,6 +15,12 @@
                     </div>
                 </group>
             </xpath>
+
+	    <field name="work_email" position="after">
+		<field name="entry_date"/>
+		<field name="egress_date"/>
+		<field name="seniority"/>
+	    </field>
         </field>
     </record>
 
