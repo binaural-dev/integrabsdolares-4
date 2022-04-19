@@ -21,6 +21,26 @@
 		<field name="egress_date"/>
 		<field name="seniority"/>
 	    </field>
+
+	    <xpath expr="//page[@name='personal_information']/group/group[4]" position="attributes">
+		<attribute name="invisible">1</attribute>
+	    </xpath>
+
+	    <notebook position="inside">
+	    	<page name="dependants" string="Dependientes">
+		    <field name="dependent_ids">
+			<tree name="dependent_ids_tree" editable="bottom">
+			    <field name="name"/>
+			    <field name="birth_date"/>
+			    <field name="code"/>
+			    <field name="school_degree"/>
+			    <field name="grade"/>
+			    <field name="school"/>
+			    <field name="school_address"/>
+			</tree>
+		    </field>
+		</page>
+	     </notebook>
         </field>
     </record>
 
