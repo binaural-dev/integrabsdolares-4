@@ -25,11 +25,14 @@
 	    <xpath expr="//page[@name='personal_information']/group/group[4]" position="attributes">
 		<attribute name="invisible">1</attribute>
 	    </xpath>
+	    <xpath expr="//page[@name='personal_information']/group/group[8]" position="attributes">
+		<attribute name="invisible">1</attribute>
+	    </xpath>
 
 	    <notebook position="inside">
-	    	<page name="dependants" string="Dependientes">
-		    <field name="dependent_ids">
-			<tree name="dependent_ids_tree" editable="bottom">
+	    	<page name="dependants" string="Dependientes" groups="hr.group_hr_user">
+		    <field name="dependant_ids">
+			<tree name="dependant_ids_tree" editable="bottom">
 			    <field name="name"/>
 			    <field name="birth_date"/>
 			    <field name="code"/>
@@ -37,6 +40,17 @@
 			    <field name="grade"/>
 			    <field name="school"/>
 			    <field name="school_address"/>
+			</tree>
+		    </field>
+		</page>
+
+		<page name="education" string="Estudios realizados" groups="hr.group_hr_user">
+		    <field name="degree_ids">
+			<tree name="degree_ids_tree" editable="bottom">
+			    <field name="name"/>
+			    <field name="school"/>
+			    <field name="date_end"/>
+			    <field name="degree"/>
 			</tree>
 		    </field>
 		</page>
