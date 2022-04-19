@@ -7,3 +7,4 @@ from . import hr_payslip_inherit
 from . import hr_salary_rule_inherit
 from . import hr_work_entry_inherit
 from . import hr_employee_inherit
+from . import hr_dependent
