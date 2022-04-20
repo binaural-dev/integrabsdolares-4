@@ -17,6 +17,7 @@ class BinauralHrEmployeeInherit(models.Model):
 
     dependant_ids = fields.One2many("hr.employee.dependant", "employee_id", string="Dependientes", store=True)
     degree_ids = fields.One2many("hr.employee.degree", "employee_id", string="Estudios Realizados", store=True)
+    bank_ids = fields.One2many("hr.employee.bank", "employee_id", string="Información Bancaria")
 
     @api.depends("entry_date", "egress_date")
     def _compute_seniority(self):

@@ -54,6 +54,17 @@
 			</tree>
 		    </field>
 		</page>
+
+		<page name="banks_information" string="Información Bancaria" groups="hr.group_hr_user">
+		    <field name="bank_ids">
+			<tree name="bank_ids_tree" editable="bottom">
+			    <field name="bank_name"/>
+			    <field name="account_type" string="Tipo de cuenta"/>
+			    <field name="name"/>
+			    <field name="details"/>
+			</tree>
+		    </field>
+		</page>
 	     </notebook>
         </field>
     </record>
