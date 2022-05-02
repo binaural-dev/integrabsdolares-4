@@ -685,6 +685,44 @@
             </div>
         </div>
 
+        <!--Total-->
+        <div class="container" style="font-size:10px !important;">
+            <div>
+                <div class="row text-center">
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="col-auto" style="width:7%">
+                        <span style="visibility:hidden">--</span>
+                    </div>
+                    <div class="" style="width:12%">
+			            <span t-esc="111"/>
+                    </div>
+                    
+
+                </div>
+            </div>
+        </div>
+        
+
+        
+        
+
         <!--<div style="margin-top:20px;font-size:12px !important;" class="container">
              <div style="width:40%; float:right">
                  <div style="width:100%; font:14px bold">
