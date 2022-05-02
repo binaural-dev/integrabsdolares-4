@@ -187,9 +187,10 @@
 
                 <!--Compras sin derecho a credito IVA -->  
                 <t t-foreach="set(retention.retention_line.invoice_id.mapped('id'))" t-as="n">
-                    <t t-foreach="[line.amount_by_group[-1][-5] for line in retention.retention_line.invoice_id if line.id == n]" t-as="v">
-                        <t t-set="total_amount_except" t-value="total_amount_except + v"/>
-                    </t>
+                        <t t-foreach="[line.amount_by_group[-1][-5] for line in retention.retention_line.invoice_id if line.id == n and line.amount_by_group != '']" t-as="v">
+                            <t t-set="total_amount_except" t-value="total_amount_except + v"/>     
+                        </t>
+                    
                 </t>   
 
 
@@ -397,7 +398,7 @@
                         <span style="visibility:hidden">--</span>
                     </div>
                     <div class="" style="width:7%">
-                        <span t-esc="total_amount_except "
+                        <span t-esc="total_amount_except"
                               t-options='{"widget": "float", "precision": get_digits}'/>
                     </div>
                     <div class="" style="width:10%">
