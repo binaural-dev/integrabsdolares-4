@@ -187,12 +187,10 @@
 
                 <!--Compras sin derecho a credito IVA -->  
                 <t t-foreach="set(retention.retention_line.invoice_id.mapped('id'))" t-as="n">
-                        <t t-foreach="[line.amount_by_group[-1][-5] for line in retention.retention_line.invoice_id if line.id == n and line.amount_by_group != '']" t-as="v">
-                            <t t-set="total_amount_except" t-value="total_amount_except + v"/>     
-                        </t>
-                    
+                    <t t-foreach="[line.amount_by_group[-1][-5] for line in retention.retention_line.invoice_id if line.id == n and line.amount_by_group != '']" t-as="v">
+                        <t t-set="total_amount_except" t-value="total_amount_except + v"/>     
+                    </t>        
                 </t>   
-
 
                 <t t-foreach="retention.retention_line" t-as="line">
                     <div class="row">
@@ -462,7 +460,6 @@
                     <img style="max-height:100px;width:200px;float:left" t-if="res_company.logo"
                          t-att-src="'data:image/png;base64,%s' % to_text(res_company.logo)"/>
                 </div>
-
                 <div class="col-8">
                     <div class="col-12">
                         <h6>CONSTANCIA DE RETENCIÓN EN MATERIA DEL ISLR</h6>
@@ -470,11 +467,20 @@
                     <div class="col-12">
                         <span>Art. 24 del Drecreto 1808 Según G.O Nro 36.203 de fecha de mayo de 1997</span>
                     </div>
-                    <div class="col-12"></div>
-                    <div class="col-12" style="text-align:center">
+                <br />
+                <div class="col-12 row justify-content-end" style="margin-top:8px">
+                    <div class="col-6">
+                        <span>Nro Comprobante:</span>
+                        <div>
+                            <span t-esc="retention.number"></span>
+                        </div>
+                    </div>
+                    <div class="col-6">
                         <span>Fecha:</span>
                         <span t-esc="retention.date" t-options='{"widget": "date"}'/>
                     </div>
+                </div>
+
                 </div>
             </div>
         </div>
