@@ -396,8 +396,7 @@
                         <span style="visibility:hidden">--</span>
                     </div>
                     <div class="" style="width:7%">
-                        <span t-esc="total_amount_except"
-                              t-options='{"widget": "float", "precision": get_digits}'/>
+                        <span style="visibility:hidden">--</span>
                     </div>
                     <div class="" style="width:10%">
 			            <span t-esc="facture_amount"
