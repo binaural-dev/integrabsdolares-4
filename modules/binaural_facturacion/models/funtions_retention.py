@@ -280,7 +280,7 @@ def create_move_refund_retention(self, line_ret, ret_line, account, journal, amo
         # Asiento Contable
         if new_move:
             move_obj = self.env['account.move'].create({
-                'name': 'RIV-' + self.number + "-" + ret_line.invoice_id.name if self.type_retention in [
+                'name': 'RIV-aaaaaaaa' + self.number + "-" + ret_line.invoice_id.name if self.type_retention in [
                     'iva'] else 'RIS-' + self.number + "-" + ret_line.invoice_id.name,
                 'date': self.date_accounting,
                 'journal_id': journal.id,
