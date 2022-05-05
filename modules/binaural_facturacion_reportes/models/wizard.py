@@ -185,6 +185,7 @@ class WizardAccountingReports(models.TransientModel):
         total_6 = 0.00
         total_7 = 0.00
         total_8 = 0.00
+        total_9 = 0.00
         range_start = 'Desde: ' + datetime.strptime(start, '%Y-%m-%d').strftime('%d/%m/%Y')
         range_end = 'Hasta: ' + datetime.strptime(end, '%Y-%m-%d').strftime('%d/%m/%Y')
         worksheet2 = workbook.add_worksheet(name)
@@ -262,6 +263,7 @@ class WizardAccountingReports(models.TransientModel):
             total_6 += data[i][16]
             total_7 += data[i][17]
             total_8 += data[i][19]
+            total_9 += data[i][20]
             i += 1
         worksheet2.write_number(col2, 9, float(total_1), currency_format)
         worksheet2.write_number(col2, 10, float(total_2), currency_format)
@@ -271,6 +273,7 @@ class WizardAccountingReports(models.TransientModel):
         worksheet2.write_number(col2, 16, float(total_6), currency_format)
         worksheet2.write_number(col2, 17, float(total_7), currency_format)
         worksheet2.write_number(col2, 19, float(total_8), currency_format)
+        worksheet2.write_number(col2, 20, float(total_9), currency_format)
         cells = xlsxwriter.utility.xl_range(6, 0, col2, col3)
         worksheet2.add_table(cells, {'data': data, 'total_row': True, 'columns': columns2, 'header_row': False})
         encabezado = 4 + len(data) + 5
