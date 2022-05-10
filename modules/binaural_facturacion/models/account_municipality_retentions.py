@@ -28,6 +28,9 @@ class MunicipalityRetentions(models.Model):
         ('cancel', 'Cancelada')], string="Estado", default='draft', copy=False)
     retention_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'retention_id', string="Retenciones", copy=False)
+
+    #Comprobante/numero de secuencia que se guardara en asientos contables
+    number = fields.Char('Comprobante')
     #  active = fields.Boolean("Active", default=True)
 
     @api.constrains('name')
@@ -67,6 +70,8 @@ class MunicipalityRetentions(models.Model):
                 retention_line.invoice_id.write({
                     "municipality_tax_voucher_id": self.id,
                 })
+        move = None
+        
 
         journal_id = None
         account_id = None
@@ -86,6 +91,7 @@ class MunicipalityRetentions(models.Model):
         entries_to_post = []
 
         self.state = 'emitted'
+
 
         for line in self.retention_line_ids:
             account_invoice = None
@@ -107,6 +113,14 @@ class MunicipalityRetentions(models.Model):
             retention_line.invoice_id.js_assign_outstanding_line(
                 entries_to_post[index].line_ids[0].id)
 
+        #Numero de secuencia de impuestos municipales
+        number = 'RM-' + self.name + "-" + self.retention_line_ids.invoice_id.name
+
+        move = self.env['account.move'].search([('ref', '=', self.name)])  
+        move.write({
+            'name':number
+        })
+
     def action_open_wizard(self):
         return {
             'name': 'Reporte de Retenciones Municipales',
@@ -120,7 +134,7 @@ class MunicipalityRetentions(models.Model):
         }
 
     #Cancelar impuestos municipales de proveedor, si las lineas de retencion son del proveedor se eliminan, el estado pasa 
-    # a cancelado y se hace unlink, despues de esto retorna a la pagina de impuestos municipales de proveedores.
+    # a cancelado y se hace unlink, despues de esto retorna el estado cancel.
     def action_cancel(self):
         move = None
         self.retention_line_ids.invoice_id.municipality_retentions_line_ids.unlink()
