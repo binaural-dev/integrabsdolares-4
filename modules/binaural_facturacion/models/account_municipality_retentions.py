@@ -28,6 +28,7 @@ class MunicipalityRetentions(models.Model):
         ('cancel', 'Cancelada')], string="Estado", default='draft', copy=False)
     retention_line_ids = fields.One2many(
         'account.municipality.retentions.line', 'retention_id', string="Retenciones", copy=False)
+    #  active = fields.Boolean("Active", default=True)
 
     @api.constrains('name')
     def constraint_name(self):
@@ -118,6 +119,20 @@ class MunicipalityRetentions(models.Model):
             'target': 'new',
         }
 
+    #Cancelar impuestos municipales de proveedor, si las lineas de retencion son del proveedor se eliminan, el estado pasa 
+    # a cancelado y se hace unlink, despues de esto retorna a la pagina de impuestos municipales de proveedores.
+    def action_cancel(self):
+        move = None
+        self.retention_line_ids.invoice_id.municipality_retentions_line_ids.unlink()
+        move = self.env['account.move'].search([('ref', '=', self.name)])  
+        move.write({
+            'state':'cancel'
+        })
+        self.state = 'cancel'
+        #move = self.env['account.move'].search([('ref', '=' 'retention')])
+        #self.unlink()
+        
+    
 
 def addEntryToJournal(obj, journal_id, account_id, date_accounting, ref,
                       foreign_currency_rate, account_invoice, partner_id, foreign_rate, type, total_retained,  currency_id):
@@ -172,3 +187,5 @@ def addEntryToJournal(obj, journal_id, account_id, date_accounting, ref,
             ],
         })
     return move
+
+
