@@ -19,6 +19,30 @@ class BinauralHrEmployeeInherit(models.Model):
     degree_ids = fields.One2many("hr.employee.degree", "employee_id", string="Estudios Realizados", store=True)
     bank_ids = fields.One2many("hr.employee.bank", "employee_id", string="Información Bancaria")
 
+    prefix_vat = fields.Selection([
+        ('V', 'V'), ('E', 'E'),
+    ], "Prefijo Rif", default='V')
+    street = fields.Char(string="Calle")
+    street2 = fields.Char(string="Calle 2")
+    city_id = fields.Many2one(
+        "res.country.city", "Ciudad", tracking=True, domain="[('state_id','=',state_id)]")
+    state_id = fields.Many2one(
+        "res.country.state", "Estado", tracking=True, domain="[('country_id','=',country_id)]")
+    zip = fields.Char(string="Código Postal", change_default=True)
+    municipality_id = fields.Many2one(
+        'res.country.municipality', "Municipio", tracking=True, domain="[('state_id','=',state_id)]")
+    house_type = fields.Selection([
+        ("owned", "Propia"),
+        ("rented", "Alquilada"),
+        ("family", "Familiar"),
+    ], "Vivienda", default="owned", tracking=True)
+    private_mobile_phone = fields.Char(string="Teléfono celular personal", tracking=True)
+
+    def default_country_id(self):
+        return self.env.ref("base.ve")
+
+    country_id = fields.Many2one(default=default_country_id)
+
     @api.depends("entry_date", "egress_date")
     def _compute_seniority(self):
         for employee in self:
@@ -53,4 +77,10 @@ class BinauralHrEmployeeInherit(models.Model):
     def _check_dates(self):
         for employee in self:
             if employee.egress_date and employee.egress_date <= employee.entry_date:
-                raise ValidationError(_("La fecha de egreso debe ser mayor a la fecha de ingreso"))
+                raise ValidationError(_("La fecha de egreso debe ser mayor a la fecha de ingreso."))
+
+    @api.constrains("vat")
+    def _check_vat(self):
+        for employee in self:
+            if any(self.env["hr.employee"].sudo().search([("vat", '=', employee.vat)])):
+                raise ValidationError(_("Ya existe un empleado con ese RIF."))
