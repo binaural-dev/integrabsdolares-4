@@ -79,8 +79,14 @@ class BinauralHrEmployeeInherit(models.Model):
             if employee.egress_date and employee.egress_date <= employee.entry_date:
                 raise ValidationError(_("La fecha de egreso debe ser mayor a la fecha de ingreso."))
 
-    @api.constrains("vat")
-    def _check_vat(self):
+    @api.constrains("identification_id", "prefix_vat")
+    def _check_identification_id(self):
         for employee in self:
-            if any(self.env["hr.employee"].sudo().search([("vat", '=', employee.vat)])):
+            employee_with_the_same_vat = self.env["hr.employee"].sudo().search([
+                ("identification_id", '=', employee.identification_id),
+                ("prefix_vat", '=', employee.prefix_vat),
+                ("id", "!=", employee.id),
+            ])
+            if any(employee_with_the_same_vat):
+                _logger.warning(self.env["hr.employee"].sudo().search([("identification_id",'=',employee.identification_id)]))
                 raise ValidationError(_("Ya existe un empleado con ese RIF."))
