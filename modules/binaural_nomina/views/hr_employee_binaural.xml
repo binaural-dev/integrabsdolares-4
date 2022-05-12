@@ -17,8 +17,10 @@
             </xpath>
 
 	    <field name="work_email" position="after">
+		<field name="has_open_contract"/>
 		<field name="entry_date"/>
-		<field name="egress_date"/>
+		<field name="departure_date"
+		       attrs="{'readonly': [('has_open_contract', '=', True)]}"/>
 		<field name="seniority"/>
 	    </field>
 

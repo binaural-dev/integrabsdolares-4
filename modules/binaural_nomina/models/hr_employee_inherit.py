@@ -12,7 +12,6 @@ class BinauralHrEmployeeInherit(models.Model):
     porc_ari = fields.Float(string="Porcentaje ARI", help="Porcentaje retencion ISLR", digits=(5,2), default=0.0)
 
     entry_date = fields.Date(string="Fecha de ingreso", required=True, tracking=True)
-    egress_date = fields.Date(string="Fecha de egreso", tracking=True)
     seniority = fields.Char(string="Antigüedad", compute="_compute_seniority")
 
     dependant_ids = fields.One2many("hr.employee.dependant", "employee_id", string="Dependientes", store=True)
@@ -38,18 +37,20 @@ class BinauralHrEmployeeInherit(models.Model):
     ], "Vivienda", default="owned", tracking=True)
     private_mobile_phone = fields.Char(string="Teléfono celular personal", tracking=True)
 
+    has_open_contract = fields.Boolean(string="Tiene Contrato", compute="_compute_has_open_contract")
+
     def default_country_id(self):
         return self.env.ref("base.ve")
 
     country_id = fields.Many2one(default=default_country_id)
 
-    @api.depends("entry_date", "egress_date")
+    @api.depends("entry_date", "departure_date")
     def _compute_seniority(self):
         for employee in self:
             seniority = ""
             if employee.entry_date:
                 from_date = employee.entry_date
-                to_date = employee.egress_date if employee.egress_date else fields.Date.today()
+                to_date = employee.departure_date if employee.departure_date else fields.Date.today()
 
                 diff = relativedelta.relativedelta(to_date, from_date)
 
@@ -73,10 +74,17 @@ class BinauralHrEmployeeInherit(models.Model):
                     seniority = f"{years} {years_string} " + seniority
             employee.seniority = seniority
 
-    @api.constrains("entry_date", "egress_date")
+    @api.depends("contract_ids")
+    def _compute_has_open_contract(self):
+        for employee in self:
+            employee.has_open_contract = False
+            if any(self.env["hr.contract"].search([("state", '=', "open"), ("employee_id", '=', employee.id)])):
+                employee.has_open_contract = True
+
+    @api.constrains("entry_date", "departure_date")
     def _check_dates(self):
         for employee in self:
-            if employee.egress_date and employee.egress_date <= employee.entry_date:
+            if employee.departure_date and employee.departure_date <= employee.entry_date:
                 raise ValidationError(_("La fecha de egreso debe ser mayor a la fecha de ingreso."))
 
     @api.constrains("identification_id", "prefix_vat")
