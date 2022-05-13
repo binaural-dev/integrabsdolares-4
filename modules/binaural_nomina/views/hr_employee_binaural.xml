@@ -16,10 +16,14 @@
                 </group>
             </xpath>
 
+	    <xpath expr="//group[@name='departure']/field[@name='departure_date']" position="attributes">
+		<attribute name="invisible">1</attribute>
+            </xpath>
+
 	    <field name="work_email" position="after">
 		<field name="has_open_contract"/>
 		<field name="entry_date"/>
-		<field name="departure_date"
+		<field name="departure_date" string="Fecha de egreso"
 		       attrs="{'readonly': [('has_open_contract', '=', True)]}"/>
 		<field name="seniority"/>
 	    </field>
@@ -104,5 +108,4 @@
 	     </notebook>
         </field>
     </record>
-
 </odoo>
